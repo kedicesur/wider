@@ -1,0 +1,69 @@
+{
+  "name": "wider",
+  "displayName": "Wider - JS Code Formatter",
+  "description": "Wider format for JS/TS",
+  "version": "0.0.1",
+  "publisher": "Redu",
+  "author": "Ömer Kaşdarma",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Formatters"
+  ],
+  "keywords": [
+    "comma first",
+    "formatter",
+    "javascript",
+    "js",
+    "ternary",
+    "typescript",
+    "ts",
+    "wider"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration":{
+      "title": "Wider",
+      "properties": {
+        "wider.ternaryFormatting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activate ternary formatting"
+        },
+        "wider.commaFirstLayout": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activate comma-first style for objects and parantehesised values such as arguments / sequenced expressions."
+        },
+        "wider.stackedMethodChaining": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activate stacked method chaning."
+        },
+        "wider.deepIndentedFunctions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activate deep indentation for classical functions."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "typescript": "^5.3.3",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8"
+  }
+}
