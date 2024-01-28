@@ -11,7 +11,7 @@ function activate(context) {
       editor    = vscode.window.activeTextEditor,
       config    = vscode.workspace.getConfiguration("editor");
   
-	console.log('"Wider" is now active!');
+	console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
                             , vscode.workspace.onDidChangeConfiguration(e =>  e.affectsConfiguration("wider.commaFirstLayout")      ? cflActive = !cflActive
                                                                                                                                     :
@@ -21,7 +21,9 @@ function activate(context) {
                                                                                                                                     :
                                                                               e.affectsConfiguration("wider.ternaryFormatting")     ? tefActive = !tefActive
                                                                                                                                     : void 0)
-                            , vscode.window.onDidChangeActiveTextEditor(e => editor = e)
+                            , vscode.window.onDidChangeActiveTextEditor(e => ( editor = e
+                                                                             , console.log(`"Wider" is now active for ${editor.document.languageId} language!'`)
+                                                                             ))
                             );
 
 // Utility functions
@@ -30,10 +32,11 @@ function activate(context) {
     const [UPSTR,DNSTR] = mod === "Ter" ? [":", "?"]
                                         :
                           mod === "Dot" ? [")", "("]
-                          /*Otherwise*/ : [")}", "({"];
+                          /*Otherwise*/ : [")}]", "({["];
     let pln = pos.line,
         pch = pos.character,
-        cnt = 1;
+        cnt = 1,
+        dix; 
         
     while(cnt && pln >= 0){
       while(cnt && pch-- > 0){
@@ -42,13 +45,18 @@ function activate(context) {
         UPSTR.includes(txt[pch]) ? cnt++
                                  : void 0;
       }
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/) // get the index of variable name
+             , dix >= 0 && (cnt = 0)                                            // after last let or var on line
+             )
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "Dot" ? txt.lastIndexOf(".", pch)
-                                : pch
-                : -1;
+    return !cnt ? mod === "Dot" ? [txt.lastIndexOf(".", pch), -1] 
+                                :
+                  dix >= 0      ? [-1, dix]
+                                : [pch, -1]
+                : [-1, -1];
   }
 
   function isInString(txt, pos){
@@ -89,7 +97,7 @@ function activate(context) {
     !isInComment(txt, pos) &&
     !isInString(txt, pos)  &&
     !isDeletion(change)    && ( change?.text === ":"  ? /^.*[?:].*:|:.*[?:].*$/.test(txt) &&
-                                                        tefActive                         && ( nix = indexOfIndent(txt, pos, "Ter")
+                                                        tefActive                         && ( nix = indexOfIndent(txt, pos, "Ter")[0]
                                                                                              , nix >= 0 && editor.edit(eb => eb.replace( new vscode.Range(pos,pos.translate(0,1))
                                                                                                                                        , "\n" + " ".repeat(nix) + ": "
                                                                                                                                        ))
@@ -104,40 +112,38 @@ function activate(context) {
                                                                                    )
                                                                      )
                                                       :
-                                change?.text === ","  ? ( nix = cflActive ? indexOfIndent(txt,pos)
-                                                                          : -1
-                                                        , nix >= 0 ? txt[nix] === "{" ||
-                                                                     txt[nix] === "(" ? txt[nix+1] === " " && editor.edit(eb => ( eb.insert(pos.translate(0, 1), " ")
-                                                                                                                                , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                                                , /,\s*[)}]+$/.test(txt) && eb.insert( pos.translate(0,1)
-                                                                                                                                                                     , "\n" + " ".repeat(nix)
-                                                                                                                                                                     )
-                                                                                                                                ))
-                                                                                                                    .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                                                    .catch(err => console.log(err))
-                                                                                      : editor.edit( eb => ( eb.insert(pos.translate(0,1), " ")
-                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                           ))
-                                                                                              .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                              .catch(err => console.log(err))
-                                                                   : ( dix = txt.slice(0, pix)                                          // get the index of variable name
-                                                                                .search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/) // after last let or var on line
-                                                                     , dix >= 0 ? editor.edit(eb => eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix)))
-                                                                                        .then(_  => moveCursorTo(pos.line + 1, dix))
-                                                                                        .catch(err => console.log(err))
-                                                                                : ( cix = txt.search(/(?<=^\s*),/)
-                                                                                  , cix !== pix && 
-                                                                                    cix >= 0    && editor.edit(eb => ( eb.insert(pos.translate(0,1), " ")
-                                                                                                                     , eb.insert(pos, "\n" + " ".repeat(cix))
-                                                                                                                     ))
-                                                                                                         .then(_ => moveCursorTo(pos.line + 1, cix + 2))
-                                                                                                         .catch(err => console.log(err))
-                                                                                  )
+                                change?.text === ","  ? ( [nix, dix] = cflActive ? indexOfIndent(txt,pos)
+                                                                                 : [-1, -1]
+                                                        , nix >= 0 ? "{([".includes(txt[nix]) ? txt[nix+1] === " " && editor.edit(eb => ( eb.insert(pos.translate(0, 1), " ")
+                                                                                                                                        , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                                        , /,\s*[)}\]]+$/.test(txt) && eb.insert( pos.translate(0,1)
+                                                                                                                                                                             , "\n" + " ".repeat(nix)
+                                                                                                                                                                             )
+                                                                                                                                        ))
+                                                                                                                            .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                                                            .catch(err => console.log(err))
+                                                                                              : editor.edit( eb => ( eb.insert(pos.translate(0,1), " ")
+                                                                                                                   , console.log("here")
+                                                                                                                   , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                   ))
+                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                                      .catch(err => console.log(err))
+                                                                   :
+                                                          dix >= 0 ? editor.edit(eb => eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix)))
+                                                                           .then(_  => moveCursorTo(pos.line + 1, dix))
+                                                                           .catch(err => console.log(err))
+                                                                   : ( cix = txt.search(/(?<=^\s*),/)
+                                                                     , cix !== pix && 
+                                                                       cix >= 0    && editor.edit(eb => ( eb.insert(pos.translate(0,1), " ")
+                                                                                                        , eb.insert(pos, "\n" + " ".repeat(cix))
+                                                                                                        ))
+                                                                                            .then(_ => moveCursorTo(pos.line + 1, cix + 2))
+                                                                                            .catch(err => console.log(err))
                                                                      )
                                                         )
                                                       :
                                 change?.text === "."  ? smcActive          &&
-                                                        txt[pix-1] === ")" && ( nix = indexOfIndent(txt, pos.translate(0,-1), "Dot")
+                                                        txt[pix-1] === ")" && ( nix = indexOfIndent(txt, pos.translate(0,-1), "Dot")[0]
                                                                               , nix >= 0 && editor.edit(eb => eb.insert(pos, "\n" + " ".repeat(nix)))
                                                                                                   .catch(err => console.log(err))
                                                                               )
