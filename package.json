@@ -6,6 +6,8 @@
   "publisher": "Redu",
   "author": "Ömer Kaşdarma",
   "license": "MIT",
+  "icon": "images/wider.png",
+  "repository": "https://github.com/kedicesur/wider.git",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -27,6 +29,10 @@
     "onLanguage:typescript"
   ],
   "main": "./extension.js",
+  "files": [
+    "*.js", 
+    "*.ts"
+  ],
   "contributes": {
     "configuration":{
       "title": "Wider",

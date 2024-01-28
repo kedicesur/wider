@@ -98,9 +98,9 @@ No known issues.
 
 Initial release.
 
-See the [CHANGELOG](CHANGELOG) file for details.
+See the [CHANGELOG](https://github.com/kedicesur/wider/blob/master/CHANGELOG) file for details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/kedicesur/wider/blob/master/LICENSE) file for details.
 

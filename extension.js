@@ -1,21 +1,29 @@
 const vscode = require('vscode');
+const DISPOSABLES = [];
 
 function activate(context) {
   
-	console.log('"Wider" is now active!');
-
-  const editor     = vscode.window.activeTextEditor;
-  const config     = vscode.workspace.getConfiguration("editor");
-  const UNDO       = 1;
-	const LISTENER_1 = editor && vscode.workspace.onDidChangeTextDocument(fixOnType);
-  const LISTENER_2 = editor && vscode.workspace.onDidChangeConfiguration(updateSettings);
-
+  const UNDO    = 1;
   let cflActive = true,
       difActive = true,
       smcActive = true,
-      tefActive = true;
-
+      tefActive = true,
+      editor    = vscode.window.activeTextEditor,
+      config    = vscode.workspace.getConfiguration("editor");
   
+	console.log('"Wider" is now active!');
+  editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
+                            , vscode.workspace.onDidChangeConfiguration(e =>  e.affectsConfiguration("wider.commaFirstLayout")      ? cflActive = !cflActive
+                                                                                                                                    :
+                                                                              e.affectsConfiguration("wider.deepIndentedFunctions") ? difActive = !difActive
+                                                                                                                                    :
+                                                                              e.affectsConfiguration("wider.stackedMethodChaining") ? smcActive = !smcActive
+                                                                                                                                    :
+                                                                              e.affectsConfiguration("wider.ternaryFormatting")     ? tefActive = !tefActive
+                                                                                                                                    : void 0)
+                            , vscode.window.onDidChangeActiveTextEditor(e => editor = e)
+                            );
+
 // Utility functions
 
   function indexOfIndent(txt, pos, mod){
@@ -34,9 +42,9 @@ function activate(context) {
         UPSTR.includes(txt[pch]) ? cnt++
                                  : void 0;
       }
-      cnt && pln && ( txt = editor.document.lineAt(--pln).text
-                    , pch = txt.length
-                    );
+      cnt && pln-- && ( txt = editor.document.lineAt(pln).text
+                      , pch = txt.length
+                      );
     }
     return !cnt ? mod === "Dot" ? txt.lastIndexOf(".", pch)
                                 : pch
@@ -62,32 +70,20 @@ function activate(context) {
     editor.selection = new vscode.Selection(pos, pos);
   }
 
-  // Update Settings Function
-
-  function updateSettings(event){
-
-    event.affectsConfiguration("wider.commaFirstLayout")      ? cflActive = !cflActive
-                                                              :
-    event.affectsConfiguration("wider.deepIndentedFunctions") ? difActive = !difActive
-                                                              :
-    event.affectsConfiguration("wider.stackedMethodChaining") ? smcActive = !smcActive
-                                                              :
-    event.affectsConfiguration("wider.ternaryFormatting")     ? tefActive = !tefActive
-                                                              : void 0;
-  }
-
   // Formatting function
 
 	function fixOnType(event) {
-		const change = event.contentChanges[0];
+    //editor = vscode.window.activeTextEditor;
 
-    let pos = change.range.start,                     // position of the cursor in the editor
-        txt = editor.document.lineAt(pos.line).text,  // text of the current line
-        cix = -1,                                     // index of the last comma in line
-        dix = -1,                                     // index of the variable name if let or var definition exists
-        nix = -1,                                     // next indent index
-        pix = pos.character,                          // current index of the cursor
-        rng;                                          // a range variable
+		const change = event.contentChanges[0];
+    let pos = change.range.start,                    // position of the cursor in the editor
+        txt = editor.document.lineAt(pos.line).text, // text of the current line
+        str = change?.text,                          // added character
+        cix = -1,                                    // index of the last comma in line
+        dix = -1,                                    // index of the variable name if let or var definition exists
+        nix = -1,                                    // next indent index
+        pix = pos.character,                         // current index of the cursor
+        rng;                                         // a range variable
 
     event.reason !== UNDO  &&
     !isInComment(txt, pos) &&
@@ -162,10 +158,11 @@ function activate(context) {
 
   config.update("formatOnType", false, vscode.ConfigurationTarget.Global);
   config.update("autoClosingBrackets", "always", vscode.ConfigurationTarget.Global);
-  context.subscriptions.push(LISTENER_1, LISTENER_2);
+  DISPOSABLES.length && context.subscriptions.push(...DISPOSABLES);
 }
 
 function deactivate(){
+  DISPOSABLES.forEach(disposable => disposable.dispose);
 }
 
 module.exports = {
