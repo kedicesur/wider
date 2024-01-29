@@ -28,6 +28,12 @@ function activate(context) {
 
 // Utility functions
 
+  function supressIrrelevantPartsOf(txt){
+    return txt.replace( /\/.+\/[a-z]*|(['"`])((?:\\.|[^\\\1])*?)\1/g // Supresses the regexp and string literal parts
+                      , match => "_".repeat(match.length)            // of the code line with "_" character in length
+                      );                                             // TODO: Add comments as well..!
+  }
+
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "Ter" ? [":", "?"]
                                         :
@@ -39,6 +45,7 @@ function activate(context) {
         dix; 
         
     while(cnt && pln >= 0){
+      txt = supressIrrelevantPartsOf(txt);
       while(cnt && pch-- > 0){
         DNSTR.includes(txt[pch]) ? cnt--
                                  :
@@ -46,8 +53,8 @@ function activate(context) {
                                  : void 0;
       }
       cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/) // get the index of variable name
-             , dix >= 0 && (cnt = 0)                                            // after last let or var on line
-             )
+             , dix >= 0 && (cnt = 0)                                            // after last "let" or "var" on line
+             );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
@@ -64,7 +71,7 @@ function activate(context) {
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length - 1);
   }
 
-  function isInComment(txt, pos) {true
+  function isInComment(txt, pos) {
     const cix = txt.indexOf("//");
     return cix !== -1 && pos.character > cix;
   }
@@ -81,14 +88,13 @@ function activate(context) {
   // Formatting function
 
 	function fixOnType(event) {
-    //editor = vscode.window.activeTextEditor;
 
 		const change = event.contentChanges[0];
     let pos = change.range.start,                    // position of the cursor in the editor
         txt = editor.document.lineAt(pos.line).text, // text of the current line
-        str = change?.text,                          // added character
         cix = -1,                                    // index of the last comma in line
-        dix = -1,                                    // index of the variable name if let or var definition exists
+        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
+        lix = -1,                                    // last index of one of "})]"
         nix = -1,                                    // next indent index
         pix = pos.character,                         // current index of the cursor
         rng;                                         // a range variable
@@ -116,14 +122,16 @@ function activate(context) {
                                                                                  : [-1, -1]
                                                         , nix >= 0 ? "{([".includes(txt[nix]) ? txt[nix+1] === " " && editor.edit(eb => ( eb.insert(pos.translate(0, 1), " ")
                                                                                                                                         , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                                                        , /,\s*[)}\]]+$/.test(txt) && eb.insert( pos.translate(0,1)
-                                                                                                                                                                             , "\n" + " ".repeat(nix)
-                                                                                                                                                                             )
+                                                                                                                                        , lix = txt.slice(pix)
+                                                                                                                                                   .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/)
+                                                                                                                                        , lix >= 0 && eb.insert( pos.translate(0, lix)
+                                                                                                                                                               , "\n" + " ".repeat(nix)
+                                                                                                                                                               )
                                                                                                                                         ))
                                                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                                                                             .catch(err => console.log(err))
                                                                                               : editor.edit( eb => ( eb.insert(pos.translate(0,1), " ")
-                                                                                                                   , console.log("here")
+                                                                                                                   , console.log("here", nix)
                                                                                                                    , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                                    ))
                                                                                                       .then(_ => moveCursorTo(pos.line + 1, nix + 2))
