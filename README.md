@@ -5,7 +5,7 @@ Wider has been implemented to support a novel JavaScript on type formatting appr
 - Utilizing ternaries and short circuits for conditional evaluations instead of employing traditional constructs such as `if-then-else` or `switch-case`.
 - Opting for arrow functions over classical function declarations.
 - Employing parentheses and the comma operator in lieu of curly braces.
-- Adopting a comma-first object layout.
+- Adopting a comma-first object / array layout.
 - Opting for chaining promises over async-await.
 - Employing deep indentation for classical functions.
 
@@ -98,7 +98,11 @@ No known issues.
 
 Initial release.
 
-See the [CHANGELOG](https://github.com/kedicesur/wider/blob/master/CHANGELOG) file for details.
+### 0.0.2
+
+Added comma-first suport for .json files
+
+See the [CHANGELOG](https://github.com/kedicesur/wider/blob/master/CHANGELOG.md) file for details.
 
 ## License
 

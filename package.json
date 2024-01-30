@@ -2,9 +2,11 @@
   "name": "wider",
   "displayName": "Wider - JS Code Formatter",
   "description": "Wider format for JS/TS",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "Redu",
-  "author": "Ömer Kaşdarma",
+  "author": { "name": "Ömer Kaşdarma"
+            , "url": "https://github.com/kedicesur"
+            },
   "license": "MIT",
   "icon": "images/wider.png",
   "repository": "https://github.com/kedicesur/wider.git",
@@ -24,14 +26,16 @@
     "ts",
     "wider"
   ],
+  "main": "./extension.js",
   "activationEvents": [
     "onLanguage:javascript",
-    "onLanguage:typescript"
+    "onLanguage:typescript",
+    "onLanguage:json"
   ],
-  "main": "./extension.js",
   "files": [
     "*.js", 
-    "*.ts"
+    "*.ts",
+    "*.json" 
   ],
   "contributes": {
     "configuration":{
@@ -42,10 +46,15 @@
           "default": true,
           "description": "Activate ternary formatting"
         },
-        "wider.commaFirstLayout": {
+        "wider.commaFirstLayoutForJS/TS": {
           "type": "boolean",
           "default": true,
-          "description": "Activate comma-first style for objects and parantehesised values such as arguments / sequenced expressions."
+          "description": "Activate comma-first style for JS / TS objects and parantehesised values such as arguments / sequenced expressions."
+        },
+        "wider.commaFirstLayoutForJSON": {
+          "type": "boolean",
+          "default": false,
+          "description": "Activate comma-first style in .json files like package.json etc."
         },
         "wider.stackedMethodChaining": {
           "type": "boolean",
