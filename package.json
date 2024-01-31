@@ -1,7 +1,7 @@
 { "name": "wider"
 , "displayName": "Wider - JS Code Formatter"
 , "description": "Wider format for JS/TS"
-, "version": "0.1.0"
+, "version": "0.1.1"
 , "publisher": "Redu",
   "author": { "name": "Ömer Kaşdarma"
             , "url": "https://github.com/kedicesur"
@@ -9,7 +9,9 @@
             }
 , "license": "MIT"
 , "icon": "images/wider.png"
-, "repository": "https://github.com/kedicesur/wider.git"
+, "repository": { "type": "git"
+                , "url": "https://github.com/kedicesur/wider.git"
+                }
 , "engines": { "vscode": "^1.85.0" }
 , "categories": [ "Formatters" ]
 , "keywords": [ "comma first"

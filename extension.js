@@ -14,11 +14,11 @@ function activate(context) {
   console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
                             , vscode.workspace.onDidChangeConfiguration(updateActivators)
-                            , vscode.window.onDidChangeActiveTextEditor(e => ( editor = e
-                                                                             , language = e.document.languageId
-                                                                             , updateActivators()
-                                                                             , console.log(`"Wider" switched to ${language} language!`)
-                                                                             ))
+                            , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
+                                                                                  , language = e.document.languageId
+                                                                                  , updateActivators()
+                                                                                  , console.log(`"Wider" switched to ${language} language!`)
+                                                                                  ))
                             );
 
 // Utility functions
@@ -96,14 +96,15 @@ function activate(context) {
   // Formatting function
 
   function fixOnType(event) {
+    if (!event.contentChanges?.length) return void 0;
     const change = event.contentChanges[0];
-    let pos = change.range.start,                    // position of the cursor in the editor
-        txt = editor.document.lineAt(pos.line).text, // text of the current line
-        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        lix = -1,                                    // last index of one of "})]"
-        nix = -1,                                    // next indent index
-        pix = pos.character,                         // current index of the cursor
-        rng;                                         // a range variable
+    let pos = change.range.start,                     // position of the cursor in the editor
+        txt = editor.document.lineAt(pos.line).text,  // text of the current line
+        dix = -1,                                     // index of the variable name if "let" or "var" definition exists
+        lix = -1,                                     // last index of one of "})]"
+        nix = -1,                                     // next indent index
+        pix = pos.character,                          // current index of the cursor
+        rng;                                          // a range variable
 
     event.reason !== UNDO  &&
     !isInComment(txt, pos) &&
