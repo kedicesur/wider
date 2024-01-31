@@ -43,7 +43,7 @@ The current functionalities of Wider are as follows;
 
 - ### Comma First Objects
 
-If a space is placed after the first curly bracket, Wider Auto adopts a comma-first layout for object structures when a comma is entered at the end of the line. It's important to note that the **Auto Closing Brackets** option of the VSCode editor should be active and you should be typing between the brackets. Note that when activated, Wider will attempt to set the **Auto Closing Brackets** option to `"always"`.
+If a space is placed after the left curly brace or square bracket, Wider auto-adopts a comma-first layout for object/array structures when a comma is entered at the end of the line. It's important to know that the **Auto Closing Brackets** option of the VSCode editor should be active, and you should be typing between the brackets. Also, when activated, Wider will attempt to set the **Auto Closing Brackets** option to `"always"`. This functionality is also available for `.json` files; however, it comes disabled by default, and you have to enable it from the Wider settings if you are working on a file like `package.json`, etc.
 
 <p align="center">
   <img src="./images/comma-first_object.gif" alt="comma-first_object">
@@ -98,7 +98,9 @@ No known issues.
 
 Initial release.
 
-### 0.0.2
+### 0.1.0
+
+Ready for RC
 
 Added comma-first suport for .json files
 

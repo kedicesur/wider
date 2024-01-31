@@ -11,7 +11,7 @@ function activate(context) {
       smcActive = cflActive,
       tefActive = cflActive;
   
-	console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
+  console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
                             , vscode.workspace.onDidChangeConfiguration(updateActivators)
                             , vscode.window.onDidChangeActiveTextEditor(e => ( editor = e
@@ -51,17 +51,17 @@ function activate(context) {
         dix; 
         
     while(cnt && pln >= 0){
-      txt = txt.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1/g // Supresses the regexp and string literal parts
-                       , match => "_".repeat(match.length)                                    // of the code line with "_" character in length
-                       );                                                                     // TODO: Add comments as well..!
+      txt = txt.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1/g
+                       , match => "_".repeat(match.length)
+                       );
       while(cnt && pch-- > 0){
         DNSTR.includes(txt[pch]) ? cnt--
                                  :
         UPSTR.includes(txt[pch]) ? cnt++
                                  : void 0;
       }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)    // get the index of variable name
-             , dix >= 0 && (cnt = 0)                                               // after last "let" or "var" on line
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)
+             , dix >= 0 && (cnt = 0)
              );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
@@ -80,7 +80,7 @@ function activate(context) {
   }
 
   function isInComment(txt, pos) {
-    const cix = txt.search(/(?<![:\/])\/\/.*$/g);    // fixed https://... breaking comment test
+    const cix = txt.search(/(?<![:\/])\/\/.*$/g);
     return cix !== -1 && pos.character > cix;
   }
 
@@ -95,16 +95,15 @@ function activate(context) {
 
   // Formatting function
 
-	function fixOnType(event) {
-
-		const change = event.contentChanges[0];
-    let pos = change.range.start,                    // position of the cursor in the editor
-        txt = editor.document.lineAt(pos.line).text, // text of the current line
-        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        lix = -1,                                    // last index of one of "})]"
-        nix = -1,                                    // next indent index
-        pix = pos.character,                         // current index of the cursor
-        rng;                                         // a range variable
+  function fixOnType(event) {
+    const change = event.contentChanges[0];
+    let pos = change.range.start,
+        txt = editor.document.lineAt(pos.line).text,
+        dix = -1,
+        lix = -1,
+        nix = -1,
+        pix = pos.character,
+        rng;
 
     event.reason !== UNDO  &&
     !isInComment(txt, pos) &&
@@ -166,7 +165,7 @@ function activate(context) {
                                                         )
                                                       : void 0
                               );
-	}
+  }
 
   config.update("formatOnType", false, vscode.ConfigurationTarget.Global);
   config.update("autoClosingBrackets", "always", vscode.ConfigurationTarget.Global);
@@ -178,6 +177,6 @@ function deactivate(){
 }
 
 module.exports = {
-	activate,
-	deactivate
+  activate,
+  deactivate
 };
