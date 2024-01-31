@@ -1,84 +1,67 @@
-{
-  "name": "wider",
-  "displayName": "Wider - JS Code Formatter",
-  "description": "Wider format for JS/TS",
-  "version": "0.0.2",
-  "publisher": "Redu",
+{ "name": "wider"
+, "displayName": "Wider - JS Code Formatter"
+, "description": "Wider format for JS/TS"
+, "version": "0.1.0"
+, "publisher": "Redu",
   "author": { "name": "Ömer Kaşdarma"
             , "url": "https://github.com/kedicesur"
-            },
-  "license": "MIT",
-  "icon": "images/wider.png",
-  "repository": "https://github.com/kedicesur/wider.git",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Formatters"
-  ],
-  "keywords": [
-    "comma first",
-    "formatter",
-    "javascript",
-    "js",
-    "ternary",
-    "typescript",
-    "ts",
-    "wider"
-  ],
-  "main": "./extension.js",
-  "activationEvents": [
-    "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onLanguage:json"
-  ],
-  "files": [
-    "*.js", 
-    "*.ts",
-    "*.json" 
-  ],
-  "contributes": {
-    "configuration":{
-      "title": "Wider",
-      "properties": {
-        "wider.ternaryFormatting": {
-          "type": "boolean",
-          "default": true,
-          "description": "Activate ternary formatting"
-        },
-        "wider.commaFirstLayoutForJS/TS": {
-          "type": "boolean",
-          "default": true,
-          "description": "Activate comma-first style for JS / TS objects and parantehesised values such as arguments / sequenced expressions."
-        },
-        "wider.commaFirstLayoutForJSON": {
-          "type": "boolean",
-          "default": false,
-          "description": "Activate comma-first style in .json files like package.json etc."
-        },
-        "wider.stackedMethodChaining": {
-          "type": "boolean",
-          "default": true,
-          "description": "Activate stacked method chaning."
-        },
-        "wider.deepIndentedFunctions": {
-          "type": "boolean",
-          "default": true,
-          "description": "Activate deep indentation for classical functions."
-        }
-      }
-    }
-  },
-  "scripts": {
-    "pretest": "npm run lint",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.85.0",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
-    "typescript": "^5.3.3",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8"
-  }
+            , "email": "omer.kasdarma@gmail.com"
+            }
+, "license": "MIT"
+, "icon": "images/wider.png"
+, "repository": "https://github.com/kedicesur/wider.git"
+, "engines": { "vscode": "^1.85.0" }
+, "categories": [ "Formatters" ]
+, "keywords": [ "comma first"
+              , "formatter"
+              , "javascript"
+              , "js"
+              , "ternary"
+              , "typescript"
+              , "ts"
+              , "wider"
+              ]
+, "main": "./extension.js"
+, "activationEvents": [ "onLanguage:javascript"
+                      , "onLanguage:typescript"
+                      , "onLanguage:json"
+                      ]
+, "files": [ "*.js"
+           , "*.ts"
+           , "*.json" 
+           ]
+, "contributes": { "configuration": { "title": "Wider"
+                                    , "properties": { "wider.ternaryFormatting": { "type": "boolean"
+                                                                                 , "default": true
+                                                                                 , "description": "Activate ternary formatting"
+                                                                                 }
+                                                    , "wider.commaFirstLayoutForJS/TS": { "type": "boolean"
+                                                                                        , "default": true
+                                                                                        , "description": "Activate comma-first style for JS / TS objects and parantehesised values such as arguments / sequenced expressions."
+                                                                                        }
+                                                    , "wider.commaFirstLayoutForJSON": { "type": "boolean"
+                                                                                       , "default": false
+                                                                                       , "description": "Activate comma-first style in .json files like package.json etc."
+                                                                                       }
+                                                    , "wider.stackedMethodChaining": { "type": "boolean"
+                                                                                     , "default": true
+                                                                                     , "description": "Activate stacked method chaning."
+                                                                                     }
+                                                    , "wider.deepIndentedFunctions": { "type": "boolean"
+                                                                                     , "default": true
+                                                                                     , "description": "Activate deep indentation for classical functions."
+                                                                                     }
+                                                    }
+                                    }
+                 }
+, "scripts": { "pretest": "npm run lint"
+             , "test": "vscode-test"
+             }
+, "devDependencies": { "@types/vscode": "^1.85.0"
+                     , "@types/mocha": "^10.0.6"
+                     , "@types/node": "18.x"
+                     , "typescript": "^5.3.3"
+                     , "@vscode/test-cli": "^0.0.4"
+                     , "@vscode/test-electron": "^2.3.8"
+                     }
 }

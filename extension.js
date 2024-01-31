@@ -11,7 +11,7 @@ function activate(context) {
       smcActive = cflActive,
       tefActive = cflActive;
   
-	console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
+  console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
                             , vscode.workspace.onDidChangeConfiguration(updateActivators)
                             , vscode.window.onDidChangeActiveTextEditor(e => ( editor = e
@@ -60,8 +60,8 @@ function activate(context) {
         UPSTR.includes(txt[pch]) ? cnt++
                                  : void 0;
       }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)    // get the index of variable name
-             , dix >= 0 && (cnt = 0)                                               // after last "let" or "var" on line
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name
+             , dix >= 0 && (cnt = 0)                                             // after last "let" or "var" on line
              );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
@@ -95,9 +95,8 @@ function activate(context) {
 
   // Formatting function
 
-	function fixOnType(event) {
-
-		const change = event.contentChanges[0];
+  function fixOnType(event) {
+    const change = event.contentChanges[0];
     let pos = change.range.start,                    // position of the cursor in the editor
         txt = editor.document.lineAt(pos.line).text, // text of the current line
         dix = -1,                                    // index of the variable name if "let" or "var" definition exists
@@ -166,7 +165,7 @@ function activate(context) {
                                                         )
                                                       : void 0
                               );
-	}
+  }
 
   config.update("formatOnType", false, vscode.ConfigurationTarget.Global);
   config.update("autoClosingBrackets", "always", vscode.ConfigurationTarget.Global);
@@ -178,6 +177,6 @@ function deactivate(){
 }
 
 module.exports = {
-	activate,
-	deactivate
+  activate,
+  deactivate
 };
