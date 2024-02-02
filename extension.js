@@ -14,11 +14,11 @@ function activate(context) {
   console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
                             , vscode.workspace.onDidChangeConfiguration(updateActivators)
-                            , vscode.window.onDidChangeActiveTextEditor(e => ( editor = e
-                                                                             , language = e.document.languageId
-                                                                             , updateActivators()
-                                                                             , console.log(`"Wider" switched to ${language} language!`)
-                                                                             ))
+                            , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
+                                                                                  , language = e.document.languageId
+                                                                                  , updateActivators()
+                                                                                  , console.log(`"Wider" switched to ${language} language!`)
+                                                                                  ))
                             );
 
 // Utility functions
@@ -93,9 +93,8 @@ function activate(context) {
     editor.selection = new vscode.Selection(pos, pos);
   }
 
-  // Formatting function
-
   function fixOnType(event) {
+    if (!event.contentChanges?.length) return void 0;
     const change = event.contentChanges[0];
     let pos = change.range.start,
         txt = editor.document.lineAt(pos.line).text,
