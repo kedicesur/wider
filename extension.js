@@ -7,7 +7,6 @@ function activate(context) {
       editor    = vscode.window.activeTextEditor,
       language  = editor.document.languageId,
       isFromKbd = true,
-      isFromKbd = true,
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,
@@ -15,8 +14,8 @@ function activate(context) {
   
   console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length             &&
-                                                                            e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
-                                                                            isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
+                                                                            e.contentChanges[0].text.length < 3 &&
+                                                                            isFromKbd                           && fixOnType(e)
                                                                             )
                             , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                             , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -25,8 +24,6 @@ function activate(context) {
                                                                                   , console.log(`"Wider" switched to ${language} language!`)
                                                                                   ))
                             );
-
-// Utility functions
 
   function updateActivators(){
     const widerConfig = vscode.workspace.getConfiguration("wider");
