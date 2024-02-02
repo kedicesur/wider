@@ -94,16 +94,6 @@ No known issues.
 
 ## Release Notes
 
-### 0.0.1
-
-Initial release.
-
-### 0.1.0
-
-Ready for RC
-
-Added comma-first suport for .json files
-
 See the [CHANGELOG](https://github.com/kedicesur/wider/blob/master/CHANGELOG.md) file for details.
 
 ## License
