@@ -7,7 +7,6 @@ function activate(context) {
       editor    = vscode.window.activeTextEditor,
       language  = editor.document.languageId,
       isFromKbd = true,
-      isFromKbd = true,
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,

@@ -27,13 +27,13 @@ _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Fri Feb 02 2024 14:11:21 GMT+0300 (GMT+03:00)
 
-fix: false event checks moved to event handlers.
-     isFromKbd boolean disables the text change
-     event that originates from the inserts and
-     replaces done in fixOnType to invoke itself.
-     isFromKbd resets at editor.edit() and sets
-     back at .finally() in fixOnType. It gets
-     checked in onDidChangeTextDocument handler
-     to prevent fixOnType to be invoked for the
-     text changes originated from itself.
-ver: 0.1.2
+    fix: false event checks moved to event handlers.
+         isFromKbd boolean disables the text change
+         event that originates from the inserts and
+         replaces done in fixOnType to invoke itself.
+         isFromKbd resets at editor.edit() and sets
+         back at .finally() in fixOnType. It gets
+         checked in onDidChangeTextDocument handler
+         to prevent fixOnType to be invoked for the
+         text changes originated from itself.
+    ver: 0.1.2
