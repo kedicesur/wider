@@ -6,22 +6,24 @@ function activate(context) {
   let config    = vscode.workspace.getConfiguration("editor"),
       editor    = vscode.window.activeTextEditor,
       language  = editor.document.languageId,
+      isFromKbd = true,
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,
       tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
-  editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(fixOnType)
-                            , vscode.workspace.onDidChangeConfiguration(updateActivators)
+  editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length             &&
+                                                                            e.contentChanges[0].text.length < 3 &&
+                                                                            isFromKbd                           && fixOnType(e)
+                                                                            )
+                            , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                             , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
                                                                                   , language = e.document.languageId
                                                                                   , updateActivators()
                                                                                   , console.log(`"Wider" switched to ${language} language!`)
                                                                                   ))
                             );
-
-// Utility functions
 
   function updateActivators(){
     const widerConfig = vscode.workspace.getConfiguration("wider");
@@ -94,10 +96,9 @@ function activate(context) {
   }
 
   function fixOnType(event) {
-    if (!event.contentChanges?.length) return void 0;
     const change = event.contentChanges[0];
     let pos = change.range.start,
-        txt = editor.document.lineAt(pos.line).text,
+        txt = event.document.lineAt(pos.line).text, 
         dix = -1,
         lix = -1,
         nix = -1,
@@ -109,23 +110,30 @@ function activate(context) {
     !isInString(txt, pos)  &&
     !isDeletion(change)    && ( change?.text === ":"  ? tefActive                         &&
                                                         /^.*[?:].*:|:.*[?:].*$/.test(txt) && ( nix = indexOfIndent(txt, pos, "Ter")[0]
-                                                                                             , nix >= 0 && editor.edit(eb => eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                                                       , "\n" + " ".repeat(nix) + ": "
-                                                                                                                                       ))
+                                                                                             , nix >= 0 && editor.edit(eb => ( isFromKbd = false
+                                                                                                                             , eb.replace( new vscode.Range(pos,pos.translate(0,1))
+                                                                                                                                         , "\n" + " ".repeat(nix) + ": "
+                                                                                                                                         )
+                                                                                                                             ))
                                                                                                                  .catch(err => console.log(err))
+                                                                                                                 .finally(_ => isFromKbd = true)
                                                                                              )
                                                       :
                                 change?.text === "?"  ? tefActive && ( nix = txt.lastIndexOf(":")
                                                                      , nix >= 0 && ( rng = new vscode.Range(pos.translate(0,nix - pix + 1), pos.translate(0,1))
                                                                                    , txt = editor.document.getText(rng).slice(0,-1).trim() + " "
-                                                                                   , editor.edit(eb => eb.replace(rng, "\n" + (txt.length < nix ? " ".repeat(nix - txt.length) : "") + txt + "? "))
+                                                                                   , editor.edit(eb => ( isFromKbd = false
+                                                                                                       , eb.replace(rng, "\n" + (txt.length < nix ? " ".repeat(nix - txt.length) : "") + txt + "? ")
+                                                                                                       ))
                                                                                            .catch(err => console.log(err))
+                                                                                           .finally(_ => isFromKbd = true)
                                                                                    )
                                                                      )
                                                       :
                                 change?.text === ","  ? ( [nix, dix] = cflActive ? indexOfIndent(txt,pos)
                                                                                  : [-1, -1]
-                                                        , nix >= 0 ? "{([".includes(txt[nix]) ? txt[nix+1] === " " && editor.edit(eb => ( eb.insert(pos.translate(0, 1), " ")
+                                                        , nix >= 0 ? "{([".includes(txt[nix]) ? txt[nix+1] === " " && editor.edit(eb => ( isFromKbd = false
+                                                                                                                                        , eb.insert(pos.translate(0, 1), " ")
                                                                                                                                         , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                                                         , lix = txt.slice(pix)
                                                                                                                                                    .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/)
@@ -135,32 +143,44 @@ function activate(context) {
                                                                                                                                         ))
                                                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                                                                             .catch(err => console.log(err))
-                                                                                              : editor.edit( eb => ( eb.insert(pos.translate(0,1), " ")
+                                                                                                                            .finally(_ => isFromKbd = true)
+                                                                                              : editor.edit( eb => ( isFromKbd = false
+                                                                                                                   , eb.insert(pos.translate(0,1), " ")
                                                                                                                    , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                                    ))
                                                                                                       .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                                                       .catch(err => console.log(err))
+                                                                                                      .finally(_ => isFromKbd = true)
                                                                    :
-                                                          dix >= 0 && editor.edit(eb => eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix)))
+                                                          dix >= 0 && editor.edit(eb => ( isFromKbd = false
+                                                                                        , eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix))
+                                                                                        ))
                                                                             .then(_  => moveCursorTo(pos.line + 1, dix))
                                                                             .catch(err => console.log(err))
+                                                                            .finally(_ => isFromKbd = true)
                                                         )
                                                       :
                                 change?.text === "."  ? smcActive          &&
                                                         txt[pix-1] === ")" && ( nix = indexOfIndent(txt, pos.translate(0,-1), "Dot")[0]
-                                                                              , nix >= 0 && editor.edit(eb => eb.insert(pos, "\n" + " ".repeat(nix)))
+                                                                              , nix >= 0 && editor.edit(( isFromKbd = false
+                                                                                                        , eb => eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                        ))
                                                                                                   .catch(err => console.log(err))
+                                                                                                  .finally(_ => isFromKbd = true)
                                                                               )
                                                       :
                                 change?.text === "{}" ? ( nix = difActive ? txt.search(/function.*\(/)
                                                                           : -1
-                                                        , nix >= 0 && editor.edit(eb => eb.insert( pos.translate(0,1)
-                                                                                                 , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
-                                                                                                 ))
+                                                        , nix >= 0 && editor.edit(eb => ( isFromKbd = false
+                                                                                        , eb.insert( pos.translate(0,1)
+                                                                                                   , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
+                                                                                                   )
+                                                                                        ))
                                                                             .then( _ => ( pos = new vscode.Position(pos.line + 1, nix + 2)
                                                                                         , editor.selection = new vscode.Selection(pos, pos)
                                                                                         ))
                                                                             .catch(err => console.log(err))
+                                                                            .finally(_ => isFromKbd = true)
                                                         )
                                                       : void 0
                               );
