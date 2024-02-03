@@ -5,14 +5,14 @@ function activate(context) {
   const UNDO    = 1;
   let config    = vscode.workspace.getConfiguration("editor"),
       editor    = vscode.window.activeTextEditor,
-      language  = editor.document.languageId,
+      language  = editor?.document.languageId,
       isFromKbd = true,
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,
       tefActive = cflActive;
   
-  console.log(`"Wider" is now active for ${editor.document.languageId} language!'`);
+  console.log(`"Wider" is now active for ${language} language!'`);
   editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length             &&
                                                                             e.contentChanges[0].text.length < 3 &&
                                                                             isFromKbd                           && fixOnType(e)
