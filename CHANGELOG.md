@@ -54,3 +54,12 @@ Date: Sat Feb 03 2024 17:35:58 GMT+0300 (GMT+03:00)
     fix: removed editor check which prevented
          disposables to subscribe at installation.
     ver: 0.1.4
+_________________________________________________
+
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 03 2024 21:03:57 GMT+0300 (GMT+03:00)
+
+    fix: false delimiters in comments are eliminated.
+         some overlooked formatting in extension.js
+    imp: README.md includes issue link to repo
+    ver: 0.1.5

@@ -76,7 +76,7 @@ By default, the aforementioned features are enabled, but you have the flexibilit
 
 ## Known Issues
 
-No known issues.
+Nothing so far. Feel free to register encountered [issues](https://github.com/kedicesur/wider/issues) at the project repo.
 
 ## Release Notes
 
