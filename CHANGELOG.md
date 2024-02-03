@@ -42,6 +42,15 @@ _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 03 2024 17:01:45 GMT+0300 (GMT+03:00)
 
-    fix: language gets assigned if editor is defined
-        simplified relative image paths in README.md
+    fix: language gets assigned if editor is defined.
+         simplified relative image paths in README.md
     ver: 0.1.3
+_________________________________________________
+
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 03 2024 17:35:58 GMT+0300 (GMT+03:00)
+
+    fix: removed editor check which prevented
+         disposables to subscribe at installation.
+    ver: 0.1.4
