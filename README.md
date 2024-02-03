@@ -21,33 +21,25 @@ The current functionalities of Wider are as follows;
 
 **Simple Ternary** is the one that we know best. Entering colon (`:`) moves it to the last question mark's (`?`) indent on the next line.
 
-<p align="center">
-  <img src="./images/simple_ternary.gif" alt="simple_ternary">
-</p>
+![simple_ternary](./images/simple_ternary.gif)
 
 - ### Nested Ternary
 
 **Nested Ternary** is about narowing multiple but dependent conditions into a single resolution. Such as in pseudo code  `if x === 1 and y === 0 then doSomeThingA()` but `if x === 1 and y !== 0 then doSomeThingB()` however `if !== 1 then doSomethingC()` and assign the result to `a`. Entering colon (`:`) moves it to the last unmatched question mark's (`?`) indent on the next line.
 
-<p align="center">
-  <img src="./images/nested_ternary.gif" alt="nested_ternary">
-</p>
+![nested_ternary](./images/nested_ternary.gif)
 
 - ### Switching Ternary
 
 **Switching Ternary** is similar to the `Switch - Case` abstraction but much more powerful because we are not limited to switching between the results of a single test. It's about resolving multiple but independent conditions. For example, in pseudocode, `if x === 1 then doSomethingA()`, `if y === 0 then doSomethingB()`, `if z === 2 then doSomethingC()` and assign the result to `a`. Entering colon (`:`) moves it to the last unmatched question mark's (`?`) indent on the next line.
 
-<p align="center">
-  <img src="./images/switch_ternary.gif" alt="switch_ternary">
-</p>
+![switch_ternary](./images/switch_ternary.gif)
 
 - ### Comma First Objects
 
 If a space is placed after the left curly brace or square bracket, Wider auto-adopts a comma-first layout for object/array structures when a comma is entered at the end of the line. It's important to know that the **Auto Closing Brackets** option of the VSCode editor should be active, and you should be typing between the brackets. Also, when activated, Wider will attempt to set the **Auto Closing Brackets** option to `"always"`. This functionality is also available for `.json` files; however, it comes disabled by default, and you have to enable it from the Wider settings if you are working on a file like `package.json`, etc.
 
-<p align="center">
-  <img src="./images/comma-first_object.gif" alt="comma-first_object">
-</p>
+![comma-first_object](./images/comma-first_object.gif)
 
 - ### Comma First Expression Sequencing / Arguments
 
@@ -55,25 +47,19 @@ When the [comma operator (,)](https://developer.mozilla.org/en-US/docs/Web/JavaS
 
 If a space is placed right after the opening left bracket, Wider automatically adopts the comma-first layout mode for expression sequencing. This takes effect when a comma is added at the end of the line. It's important to note that the **Auto Closing Brackets** option of the VSCode editor should be active and you should be typing between the brackets. Also note that when activated, Wider will attempt to set the **Auto Closing Brackets** option in the VSCode editor settings to `"always"`.
 
-<p align="center">
-  <img src="./images/comma-first_expressions.gif" alt="comma-first_expressions">
-</p>
+![comma-first_expressions](./images/comma-first_expressions.gif)
 
 - ### Stacked Method Chaining
 
 Wider demonstrates a high proficiency in stacked method chaining, especially in contexts similar to JavaScript (JS) Promises, particularly when used in conjunction with **Comma First Expression Sequencing**. In the domain of Promises and other concepts centered around method chaining, the imperative nature of stacked method chaining becomes pivotal. It's important to note that Wider's functionality for **stacked method chaining** doesn't stack properties and is only effective when methods are immediately followed by a period.
 
-<p align="center">
-  <img src="./images/stacked_method_chaining.gif" alt="comma-first_expressions">
-</p>
+![stacked_method_chaining](./images/stacked_method_chaining.gif)
 
 - ### Deep Indented Functions
 
 Wherever a classical function declaration is on the line, its body gets indented 2 spaces relative to the start of the "function" keyword. This method of indentation isolates the function clearly from the rest of the code, avoiding the need to search for closing curly brackets. The usefulness of **Deep Indented Functions** is particularly evident when classically defined functions are used as callbacks or within **Comma-First Expression Sequencing**.
 
-<p align="center">
-  <img src="./images/deep_indented_function.gif" alt="comma-first_expressions">
-</p>
+![deep_indented_function](./images/deep_indented_function.gif)
 
 ## Requirements
 
@@ -99,4 +85,3 @@ See the [CHANGELOG](https://github.com/kedicesur/wider/blob/master/CHANGELOG.md)
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/kedicesur/wider/blob/master/LICENSE) file for details.
-
