@@ -37,3 +37,11 @@ Date: Fri Feb 02 2024 14:11:21 GMT+0300 (GMT+03:00)
          to prevent fixOnType to be invoked for the
          text changes originated from itself.
     ver: 0.1.2
+_________________________________________________
+
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 03 2024 17:01:45 GMT+0300 (GMT+03:00)
+
+    fix: language gets assigned if editor is defined
+        simplified relative image paths in README.md
+    ver: 0.1.3

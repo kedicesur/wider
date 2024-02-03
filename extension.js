@@ -13,17 +13,17 @@ function activate(context) {
       tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${language} language!'`);
-  editor && DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length             &&
-                                                                            e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
-                                                                            isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
-                                                                            )
-                            , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
-                            , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
-                                                                                  , language = e.document.languageId
-                                                                                  , updateActivators()
-                                                                                  , console.log(`"Wider" switched to ${language} language!`)
-                                                                                  ))
-                            );
+  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length       &&
+                                                            e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
+                                                            isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
+                                                            )
+                  , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
+                  , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
+                                                                        , language = e.document.languageId
+                                                                        , updateActivators()
+                                                                        , console.log(`"Wider" switched to ${language} language!`)
+                                                                        ))
+                  );
 
 // Utility functions
 
