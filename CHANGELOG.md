@@ -43,5 +43,5 @@ Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 03 2024 17:01:45 GMT+0300 (GMT+03:00)
 
     fix: language gets assigned if editor is defined
-        simplified relative image paths in README.md
+         simplified relative image paths in README.md
     ver: 0.1.3

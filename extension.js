@@ -13,9 +13,9 @@ function activate(context) {
       tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${language} language!'`);
-  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length       &&
-                                                            e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
-                                                            isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
+  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument( e => e.contentChanges.length        &&
+                                                              e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
+                                                              isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -55,9 +55,9 @@ function activate(context) {
         dix; 
         
     while(cnt && pln >= 0){
-      txt = txt.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1/g // Supresses the regexp and string literal parts
-                       , match => "_".repeat(match.length)                                    // of the code line with "_" character in length
-                       );                                                                     // TODO: Add comments as well..!
+      txt = txt.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g // Supresses the regexp, string literal
+                       , match => "_".repeat(match.length)                                                      // and comment parts of the code line
+                       );                                                                                       // with "_" character in the same length
       while(cnt && pch-- > 0){
         DNSTR.includes(txt[pch]) ? cnt--
                                  :
