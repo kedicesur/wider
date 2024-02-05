@@ -13,9 +13,9 @@ function activate(context) {
       tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${language} language!'`);
-  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument( e => e.contentChanges.length        &&
-                                                              e.contentChanges[0].text.length < 3 &&               // Silly way to check if the text change originates from a keypress
-                                                              isFromKbd                           && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
+  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length             &&
+                                                                  e.contentChanges[0].text.length < 3 &&                // Silly way to check if the text change originates from a keypress
+                                                                  isFromKbd                           && fixOnType(e)   // not paste see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -71,11 +71,11 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "Dot" ? [txt.lastIndexOf(".", pch), -1] 
+    return !cnt ? mod === "Dot" ? [txt.lastIndexOf(".", pch), -1, false] 
                                 :
-                  dix >= 0      ? [-1, dix]
-                                : [pch, -1]
-                : [-1, -1];
+                  dix >= 0      ? [-1, dix, false]
+                                : [pch, -1, txt[pch+1] === " "]                  // return value now includes matching delimiter being followed by a " "
+                : [-1, -1, false];                                               // this enables / disables comma-first only for the object being edited
   }
 
   function isInString(txt, pos){
@@ -97,7 +97,7 @@ function activate(context) {
     editor.selection = new vscode.Selection(pos, pos);
   }
 
-  // Formatting function
+  // Formatting functions
 
   function fixOnType(event) {
     const change = event.contentChanges[0];
@@ -134,20 +134,21 @@ function activate(context) {
                                                                                    )
                                                                      )
                                                       :
-                                change?.text === ","  ? ( [nix, dix] = cflActive ? indexOfIndent(txt,pos)
-                                                                                 : [-1, -1]
-                                                        , nix >= 0 ? "{([".includes(txt[nix]) ? txt[nix+1] === " " && editor.edit(eb => ( isFromKbd = false
-                                                                                                                                        , eb.insert(pos.translate(0, 1), " ")
-                                                                                                                                        , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                                                        , lix = txt.slice(pix)
-                                                                                                                                                   .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/)
-                                                                                                                                        , lix >= 0 && eb.insert( pos.translate(0, lix)
-                                                                                                                                                               , "\n" + " ".repeat(nix)
-                                                                                                                                                               )
-                                                                                                                                        ))
-                                                                                                                            .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                                                            .catch(err => console.log(err))
-                                                                                                                            .finally(_ => isFromKbd = true)
+                                change?.text === ","  ? ( [nix, dix, act] = cflActive ? indexOfIndent(txt,pos)
+                                                                                      : [-1, -1, false]
+                                                        , nix >= 0 &&
+                                                          act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( isFromKbd = false
+                                                                                                                  , eb.insert(pos.translate(0, 1), " ")
+                                                                                                                  , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                  , lix = txt.slice(pix)
+                                                                                                                              .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/)
+                                                                                                                  , lix >= 0 && eb.insert( pos.translate(0, lix)
+                                                                                                                                          , "\n" + " ".repeat(nix)
+                                                                                                                                          )
+                                                                                                                  ))
+                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                                      .catch(err => console.log(err))
+                                                                                                      .finally(_ => isFromKbd = true)
                                                                                               : editor.edit( eb => ( isFromKbd = false
                                                                                                                    , eb.insert(pos.translate(0,1), " ")
                                                                                                                    , eb.insert(pos, "\n" + " ".repeat(nix))
