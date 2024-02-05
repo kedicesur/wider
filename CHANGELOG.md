@@ -48,7 +48,6 @@ Date: Sat Feb 03 2024 17:01:45 GMT+0300 (GMT+03:00)
 _________________________________________________
 
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
-Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 03 2024 17:35:58 GMT+0300 (GMT+03:00)
 
     fix: removed editor check which prevented
@@ -63,3 +62,12 @@ Date: Sat Feb 03 2024 21:03:57 GMT+0300 (GMT+03:00)
          some overlooked formatting in extension.js
     imp: README.md includes issue link to repo
     ver: 0.1.5
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Feb 05 2024 15:34:40 GMT+0300 (GMT+03:00)
+
+    fix: comma-first should disable when no space
+         follows the left delimiter and we are on
+         lower lines still typing the object.
+    imp: README.md
+    ver: 0.1.6

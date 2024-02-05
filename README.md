@@ -15,7 +15,7 @@ The initial release of Wider aims to fulfill the basic requirements set forth by
 
 ## Features
 
-The current functionalities of Wider are as follows;
+The features introduced in this package can individually be enabled / disabled through Wider's settings menu. The current functionalities of Wider are as follows;
 
 - ### Simple Ternary
 
@@ -37,7 +37,7 @@ The current functionalities of Wider are as follows;
 
 - ### Comma First Objects
 
-If a space is placed after the left curly brace or square bracket, Wider auto-adopts a comma-first layout for object/array structures when a comma is entered at the end of the line. It's important to know that the **Auto Closing Brackets** option of the VSCode editor should be active, and you should be typing between the brackets. Also, when activated, Wider will attempt to set the **Auto Closing Brackets** option to `"always"`. This functionality is also available for `.json` files; however, it comes disabled by default, and you have to enable it from the Wider settings if you are working on a file like `package.json`, etc.
+**Even if the comma-first functionality is enabled from the settings, it will only be effective if a space is placed after the left curly brace, left paranthesis or square bracket**. Wider then auto-adopts a comma-first layout for object/array structures when a comma is entered at the end of the line. It's important to know that the **Auto Closing Brackets** option of the VSCode editor should be active, and you should be typing between the brackets. Also, when activated, Wider will attempt to set the **Auto Closing Brackets** option to `"always"`. This functionality is also available for `.json` files; however, it comes disabled by default, and you have to enable it from the Wider settings if you are working on a file like `package.json`, etc.
 
 ![comma-first_object](images/comma-first_object.gif)
 
