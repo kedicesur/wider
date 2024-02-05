@@ -71,3 +71,12 @@ Date: Mon Feb 05 2024 15:34:40 GMT+0300 (GMT+03:00)
          lower lines still typing the object.
     imp: README.md
     ver: 0.1.6
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Tue Feb 06 2024 00:39:14 GMT+0300 (GMT+03:00)
+ 
+
+    fix: delimiters in regexes and comments should be
+         working better now.
+    imp: README.md
+    ver: 0.1.7
