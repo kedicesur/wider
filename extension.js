@@ -78,14 +78,9 @@ function activate(context) {
                 : [-1, -1, false];                                               // this enables / disables comma-first only for the object being edited
   }
 
-  function isInString(txt, pos){
-    let mcs = [...txt.matchAll(/(['"`])((?:\\.|[^\\\1])*?)\1/g)];
-    return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length - 1);
-  }
-
-  function isInComment(txt, pos) {
-    const cix = txt.search(/(?<![:\/])\/\/.*$/g);    // fixed https://... breaking comment test
-    return cix !== -1 && pos.character > cix;
+  function isDontCare(txt, pos){
+    let mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
+    return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
   function isDeletion(chg){
@@ -110,8 +105,7 @@ function activate(context) {
         rng;                                         // a range variable
 
     event.reason !== UNDO  &&
-    !isInComment(txt, pos) &&
-    !isInString(txt, pos)  &&
+    !isDontCare(txt, pos)  &&
     !isDeletion(change)    && ( change?.text === ":"  ? tefActive                         &&
                                                         /^.*[?:].*:|:.*[?:].*$/.test(txt) && ( nix = indexOfIndent(txt, pos, "Ter")[0]
                                                                                              , nix >= 0 && editor.edit(eb => ( isFromKbd = false
