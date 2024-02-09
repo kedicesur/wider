@@ -15,9 +15,9 @@ function activate(context) {
       fixNext   = new Promise(resolve => _resolve = resolve);
   
   console.log(`"Wider" is now active for ${language} language!'`);
-  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => ( e.contentChanges.length             &&
-                                                                  //  e.contentChanges[0].text.length < 3 &&              // Silly way to check if the text change originates from a keypress
-                                                                    isFromKbd                           && fixOnType(e) // not paste see https://github.com/microsoft/vscode/issues/204018
+  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => ( e.contentChanges.length &&
+                                                                  //  e.contentChanges[0].text.length < 3 && // Silly way to check if the text change originates from a keypress
+                                                                    isFromKbd               && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
                                                                   )
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
@@ -69,14 +69,31 @@ function activate(context) {
     let pln = pos.line,
         pch = pos.character,
         cnt = 1,
-        dix; 
+        tps,
+        dix;
         
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
       while(cnt && pch-- > 0){
-        DNSTR.includes(txt[pch]) ? cnt--
+        DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps !== pos ? ( pos = tps
+                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line).text)
+                                                                 , pln = pos.line
+                                                                 , pch = pos.character
+                                                                 )
+                                                               : cnt--
+                                                 )
+                                               : cnt--
                                  :
-        UPSTR.includes(txt[pch]) ? cnt++
+        UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps !== pos ? ( pos = tps
+                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line).text)
+                                                                 , pln = pos.line
+                                                                 , pch = pos.character
+                                                                 )
+                                                               : cnt++
+                                                 )
+                                               : cnt++
                                  : void 0;
       }
       cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name
@@ -85,12 +102,36 @@ function activate(context) {
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
-    }
+    }console.log("count:",cnt);
     return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), -1, false] 
                               :
                   dix >= 0    ? [-1, dix, false]
                               : [pch, -1, txt[pch+1] === " "]
                 : [-1, -1, false];
+  }
+
+  function bypassObject(pos){
+    const [UPSTR,DNSTR] = ["}", "{"];
+    let pln = pos.line,
+        pch = pos.character,
+        cnt = 1,
+        txt = editor.document.lineAt(pln).text.slice(0,pch);
+
+    while(cnt && pln >= 0){
+      txt = suppressIrrelevantCharacters(txt);
+      while(cnt && pch-- > 0){
+        DNSTR.includes(txt[pch]) ? cnt--
+                                 :
+        UPSTR.includes(txt[pch]) ? cnt++
+                                 : void 0;
+      }
+      cnt && pln-- && ( txt = editor.document.lineAt(pln).text
+                      , pch = txt.length
+                      );
+    }console.log(cnt, /\)\s*\{/.test(txt.slice(0,pch+1)))
+    return !cnt ? /\)\s*\{/.test(txt.slice(0,pch+1)) ? pos
+                                                     : new vscode.Position(pln,pch)
+                : pos;
   }
 
   function isDontCare(txt, pos){
@@ -112,7 +153,7 @@ function activate(context) {
   function fixSelection(editor){
     let pos = editor.selection.start,
         txt = editor.document.getText(editor.selection)
-        sup = suppressIrrelevantCharacters(txt);
+        sup = suppressIrrelevantCharacters(txt);console.log("en baş:",txt,sup)
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trim())
                                                       , d[1].push(c+" ","")
@@ -151,7 +192,7 @@ function activate(context) {
               , editor.edit(eb => eb.replace( editor.selection, ""))
               )
   }
-  // TODO - Ternary: ":" do not register when previous "?" is followed by methods see ternary at line 167
+  
   // TODO - Comma-First: When applied "," is followed by a string thats ending with ?multiple? terminators like ")]}" it gets confused
   function fixOnType(event) {
     const change = event.contentChanges[0];
@@ -167,18 +208,19 @@ function activate(context) {
     console.log("fixOnType:",change);
     event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
-    !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                        &&
-                                                /^.*[?:].*:|:.*[?:].*$/.test(txt) ? ( nix = indexOfIndent(txt, pos, "t")[0]
-                                                                                    , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
-                                                                                                                   , eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                                               , "\n" + " ".repeat(nix) + ": "
-                                                                                                                               )
-                                                                                                                   ))
-                                                                                               : Promise.resolve()
-                                                                                    )
-                                                                                  : Promise.resolve()
+    !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
+                                                pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
+                                                                            , console.log(nix)
+                                                                            , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
+                                                                                                           , eb.replace( new vscode.Range(pos,pos.translate(0,1))
+                                                                                                                       , "\n" + " ".repeat(nix) + ": "
+                                                                                                                       )
+                                                                                                           ))
+                                                                                       : Promise.resolve()
+                                                                            )
+                                                                          : Promise.resolve()
                                               :
-                              chgtxt === "?"  ? tefActive          && 
+                              chgtxt === "?"  ? tefActive         && 
                                                 txt[pix-1] === " " ? ( nix = txt.lastIndexOf(":")
                                                                      , nix >= 0 ? ( rng = new vscode.Range(pos.translate(0,nix - pix + 1), pos.translate(0,1))
                                                                                   , txt = editor.document.getText(rng).slice(0,-1).trim() + " "
