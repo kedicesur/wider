@@ -30,8 +30,8 @@ function activate(context) {
                                                                         , updateActivators()
                                                                         , console.log(`"Wider" switched to ${language} language!`)
                                                                         ))
-                  , vscode.commands.registerTextEditorCommand( "wider.widenSelection"
-                                                             , fixSelection
+                  , vscode.commands.registerTextEditorCommand( "wider.commaFirstSelection"
+                                                             , commaFirstSelection
                                                              )
                   );
 
@@ -157,16 +157,16 @@ function activate(context) {
 
   // Formatting functions
 
-  function fixSelection(editor){
+  function commaFirstSelection(editor){
     let sel = editor.selection,
         sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity)),
         pos = sel.start,
         txt = editor.document.getText(sel),
-        sup = suppressIrrelevantCharacters(txt);console.log("en baş:",txt,sup),
+        sup = suppressIrrelevantCharacters(txt),
         tx_ = editor.document.getText(sl_);
 
     txt.split("")
-       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trim())
+       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1])
                                                       , d[1].push(c+" ","")
                                                       )
                                                     :
@@ -192,22 +192,16 @@ function activate(context) {
               , [[],[]]
               )
        .reduce((p,c) => p.concat(c))
-       .log()
-       .reduce( (p,s) => s !== "" ? p.then(_ => ( console.log("yeni işlem:", s, pos.line,pos.character)
-                                                , fixNext = new Promise(resolve => _resolve = resolve)
+       .reduce( (p,s) => s !== "" ? p.then(_ => ( fixNext = new Promise(resolve => _resolve = resolve)
                                                 , editor.edit(eb => eb.insert(pos,s))
                                                 , fixNext
                                                 ))
-                                     .then(_ => ( pos = editor.selection.active.translate(0,s.length+1)
-                                                , console.log("pos a geldim ve yeni pos:", pos.line, pos.character)
-                                                ))
+                                     .then(_ => pos = editor.selection.active.translate(0, s.length+1))
                                   : p
-              , editor.edit(eb => eb.replace( sel.union(sl_), ""))
+              , editor.edit(eb => eb.replace(sel.union(sl_), ""))
               )
-       .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)))
-     //  .then(_ => moveCursorTo(editor.selection.active.line,tx_.length));
+       .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)));
   }
-  
   // TODO - Comma-First: When applied "," is followed by a string thats ending with ?multiple? terminators like ")]}" it gets confused
   function fixOnType(event) {
     const change = event.contentChanges[0];
@@ -220,7 +214,7 @@ function activate(context) {
         nix = -1,                                    // next indent index
         pix = pos.character,                         // current index of the cursor
         rng;                                         // a range variable
-    console.log("fixOnType:",change);
+
     event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
@@ -307,11 +301,8 @@ function activate(context) {
                             ).catch(err => console.log(err))
                              .finally(_ => ( isFromKbd = true
                                            , _resolve()
-                                           , console.log("here in change")
                                            ))
-                          : ( _resolve()
-                            , console.log("here in bypass")
-                            )
+                          : _resolve()
   }
 
   config.update("formatOnType", false, vscode.ConfigurationTarget.Global);

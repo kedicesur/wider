@@ -55,11 +55,11 @@
                                                                                      }
                                                     }
                                     }
-                 , "commands": [ { "command": "wider.widenSelection"
-                                 , "title": "Wider: Format Selection"
+                 , "commands": [ { "command": "wider.commaFirstSelection"
+                                 , "title": "Wider: Seletection to Comma-First"
                                  }
                                ]
-                 , "menus": { "editor/context": [ { "command": "wider.widenSelection"
+                 , "menus": { "editor/context": [ { "command": "wider.commaFirstSelection"
                                                   , "when": "editorHasSelection"
                                                   , "group": "2_modification"
                                                   }
