@@ -1,6 +1,11 @@
 const vscode = require('vscode');
 const DISPOSABLES = [];
 
+Array.prototype.log = function(){
+                        this.forEach(e => console.log(e));
+                        return this;
+                      }
+
 function activate(context) {
   const UNDO    = 1;
   let config    = vscode.workspace.getConfiguration("editor"),
@@ -15,10 +20,9 @@ function activate(context) {
       fixNext   = new Promise(resolve => _resolve = resolve);
   
   console.log(`"Wider" is now active for ${language} language!'`);
-  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => ( e.contentChanges.length &&
+  DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
                                                                   //  e.contentChanges[0].text.length < 3 && // Silly way to check if the text change originates from a keypress
-                                                                    isFromKbd               && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
-                                                                  )
+                                                                  isFromKbd               && fixOnType(e)  // not paste see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -77,7 +81,8 @@ function activate(context) {
       while(cnt && pch-- > 0){
         DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
                                                  , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line).text)
+                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
+                                                                                                                     .text)
                                                                  , pln = pos.line
                                                                  , pch = pos.character
                                                                  )
@@ -87,7 +92,8 @@ function activate(context) {
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
                                                  , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line).text)
+                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
+                                                                                                                     .text)
                                                                  , pln = pos.line
                                                                  , pch = pos.character
                                                                  )
@@ -102,7 +108,7 @@ function activate(context) {
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
-    }console.log("count:",cnt);
+    }
     return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), -1, false] 
                               :
                   dix >= 0    ? [-1, dix, false]
@@ -128,7 +134,7 @@ function activate(context) {
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
-    }console.log(cnt, /\)\s*\{/.test(txt.slice(0,pch+1)))
+    }
     return !cnt ? /\)\s*\{/.test(txt.slice(0,pch+1)) ? pos
                                                      : new vscode.Position(pln,pch)
                 : pos;
@@ -146,14 +152,19 @@ function activate(context) {
   function moveCursorTo(lin, chr){
     const pos = new vscode.Position(lin, chr);
     editor.selection = new vscode.Selection(pos, pos);
+    return pos;
   }
 
   // Formatting functions
 
   function fixSelection(editor){
-    let pos = editor.selection.start,
-        txt = editor.document.getText(editor.selection)
-        sup = suppressIrrelevantCharacters(txt);console.log("en baş:",txt,sup)
+    let sel = editor.selection,
+        sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity)),
+        pos = sel.start,
+        txt = editor.document.getText(sel),
+        sup = suppressIrrelevantCharacters(txt);console.log("en baş:",txt,sup),
+        tx_ = editor.document.getText(sl_);
+
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trim())
                                                       , d[1].push(c+" ","")
@@ -179,18 +190,22 @@ function activate(context) {
                            , d
                            )
               , [[],[]]
-              )[0]
+              )
+       .reduce((p,c) => p.concat(c))
+       .log()
        .reduce( (p,s) => s !== "" ? p.then(_ => ( console.log("yeni işlem:", s, pos.line,pos.character)
                                                 , fixNext = new Promise(resolve => _resolve = resolve)
                                                 , editor.edit(eb => eb.insert(pos,s))
                                                 , fixNext
                                                 ))
-                                     .then(_ => ( pos = editor.selection.active.translate(0,s.length)
+                                     .then(_ => ( pos = editor.selection.active.translate(0,s.length+1)
                                                 , console.log("pos a geldim ve yeni pos:", pos.line, pos.character)
                                                 ))
                                   : p
-              , editor.edit(eb => eb.replace( editor.selection, ""))
+              , editor.edit(eb => eb.replace( sel.union(sl_), ""))
               )
+       .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)))
+     //  .then(_ => moveCursorTo(editor.selection.active.line,tx_.length));
   }
   
   // TODO - Comma-First: When applied "," is followed by a string thats ending with ?multiple? terminators like ")]}" it gets confused
@@ -210,7 +225,6 @@ function activate(context) {
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
                                                 pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
-                                                                            , console.log(nix)
                                                                             , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
                                                                                                            , eb.replace( new vscode.Range(pos,pos.translate(0,1))
                                                                                                                        , "\n" + " ".repeat(nix) + ": "
@@ -239,7 +253,7 @@ function activate(context) {
                                                                                                           , eb.insert(pos.translate(0, 1), " ")
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                           , lix = txt.slice(pix)
-                                                                                                                     .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/)
+                                                                                                                     .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/) // CHECH HERE..!
                                                                                                           , lix >= 0 && eb.insert( pos.translate(0, lix)
                                                                                                                                  , "\n" + " ".repeat(nix)
                                                                                                                                  )
@@ -270,25 +284,23 @@ function activate(context) {
                                                                   : -1
                                                 , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
                                                                                , eb.insert( pos.translate(0,1)
-                                                                                         , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
-                                                                                         )
+                                                                                          , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
+                                                                                          )
                                                                                ))
-                                                                   .then( _ => ( pos = new vscode.Position(pos.line + 1, nix + 2)
-                                                                               , editor.selection = new vscode.Selection(pos, pos)
-                                                                               ))
+                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                            : Promise.resolve()
                                                 )
                                               :
                               chgtxt === "}" ||
                               chgtxt === ")" ||
-                              chgtxt === "]"  ? ( [nix, _, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
-                                                                            : [-1, -1, false]
+                              chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
+                                                                          : [-1, -1, false]
                                                 , nix >= 0 &&
                                                   act      ? editor.edit( eb => ( isFromKbd = false
-                                                                                , eb.insert(pos.translate(0,1), " ")
+                                                                               // , eb.insert(pos.translate(0,1), " ")
                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                 ))
-                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 1))
                                                            : Promise.resolve()
                                                 )
                                               : Promise.resolve()
