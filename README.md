@@ -49,6 +49,12 @@ If a space is placed right after the opening left bracket, Wider automatically a
 
 ![comma-first_expressions](images/comma-first_expressions.gif)
 
+- ### Selection to Comma First
+
+Starting with version 0.2.0, an experimental feature has been incorporated with the purpose of transforming a chosen object or array structure into a broader comma-first layout. It is recommended that the selection closely encompasses the object or array intended for conversion. Should the selection extend to extraneous portions of your code, the algorithm's eagerness for conversion may result in unintended alterations. Prior to implementation, testing is advised, and cautious usage is encouraged.
+
+![selection_to_comma-first](images/selection_to_comma-first.gif)
+
 - ### Stacked Method Chaining
 
 Wider demonstrates a high proficiency in stacked method chaining, especially in contexts similar to JavaScript (JS) Promises, particularly when used in conjunction with **Comma First Expression Sequencing**. In the domain of Promises and other concepts centered around method chaining, the imperative nature of stacked method chaining becomes pivotal. It's important to note that Wider's functionality for **stacked method chaining** doesn't stack properties and is only effective when methods are immediately followed by a period.

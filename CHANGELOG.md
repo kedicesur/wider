@@ -80,3 +80,22 @@ Date: Tue Feb 06 2024 00:39:14 GMT+0300 (GMT+03:00)
          working better now.
     imp: README.md
     ver: 0.1.7
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Feb 11 2024 17:36:42 GMT+0300 (GMT+03:00)
+ 
+
+    fix: multiple delimiters at the end of the line
+         confusing comma-first.
+         when a ternary contains objects the colons
+         inside the object confuse ternary layout.
+         variable name can start with $ in let|var
+         regex.
+         comma-first is ok with irrelevant characters.
+    add: convert selected object in to comma first
+         layout menu command.
+         README.md includes selected to comma-first
+         feature.
+         selection_to_comma-first.gif to ./images
+         SUPPORT.md for marketplace integrity
+    ver: 0.2.0

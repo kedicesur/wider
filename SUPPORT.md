@@ -1,0 +1,1 @@
+You are welcome to utilize the project's [GitHub Issues](https://github.com/kedicesur/wider/issues) to report any issues encountered, or if preferred, you may contact the author directly via email at omer.kasdarma@gmail.com.
