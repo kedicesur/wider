@@ -1,11 +1,6 @@
 const vscode = require('vscode');
 const DISPOSABLES = [];
 
-Array.prototype.log = function(){
-                        this.forEach(e => console.log(e));
-                        return this;
-                      }
-
 function activate(context) {
   const UNDO    = 1;
   let config    = vscode.workspace.getConfiguration("editor"),
@@ -21,7 +16,7 @@ function activate(context) {
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  isFromKbd               && fixOnType(e)  // see https://github.com/microsoft/vscode/issues/204018
+                                                                  isFromKbd               && fixOnType(e)
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -52,9 +47,9 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g // Suppresses the regexp, string literal
-                      , match => "_".repeat(match.length)                                                      // and comment parts of the given string
-                      );                                                                                       // with "_" character in the same length
+    return str.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g
+                      , match => "_".repeat(match.length)
+                      );
   }
 
   function indexOfIndent(txt, pos, mod){
@@ -99,8 +94,8 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name
-             , dix >= 0 && (cnt = 0)                                                 // after last "let" or "var" on line
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
+             , dix >= 0 && (cnt = 0)
              );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
@@ -151,8 +146,6 @@ function activate(context) {
     editor.selection = new vscode.Selection(pos, pos);
     return pos;
   }
-
-  // Formatting functions
 
   function commaFirstSelection(editor){
     let sel = editor.selection,
@@ -205,14 +198,14 @@ function activate(context) {
   function fixOnType(event) {
     const change = event.contentChanges[0];
     const chgtxt = change?.text;
-    let pos = change.range.start,                    // position of the cursor in the editor
-        txt = event.document.lineAt(pos.line).text,  // text of the current line
-        act = true,                                  // comma-first activator carried from indexOfIndent()
-        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        lix = -1,                                    // last index of one of "})]"
-        nix = -1,                                    // next indent index
-        pix = pos.character,                         // current index of the cursor
-        rng;                                         // a range variable
+    let pos = change.range.start,
+        txt = event.document.lineAt(pos.line).text,
+        act = true,
+        dix = -1,
+        lix = -1,
+        nix = -1,
+        pix = pos.character,
+        rng;
 
     event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
@@ -290,7 +283,6 @@ function activate(context) {
                                                                           : [-1, -1, false]
                                                 , nix >= 0 &&
                                                   act      ? editor.edit( eb => ( isFromKbd = false
-                                                                              //, eb.insert(pos.translate(0,1), " ")
                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                 ))
                                                                    .then(_ => moveCursorTo(pos.line + 1, nix + 1))
