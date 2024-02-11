@@ -102,8 +102,8 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)\w(?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name
-             , dix >= 0 && (cnt = 0)                                             // after last "let" or "var" on line
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name
+             , dix >= 0 && (cnt = 0)                                                 // after last "let" or "var" on line
              );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
@@ -163,10 +163,12 @@ function activate(context) {
         pos = sel.start,
         txt = editor.document.getText(sel),
         sup = suppressIrrelevantCharacters(txt),
-        tx_ = editor.document.getText(sl_);
+        tx_ = editor.document.getText(sl_),
+        ino = 0;
 
     txt.split("")
-       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1])
+       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( ino = true
+                                                      , d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
                                                       , d[1].push(c+" ","")
                                                       )
                                                     :
@@ -202,7 +204,7 @@ function activate(context) {
               )
        .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)));
   }
-  // TODO - Comma-First: When applied "," is followed by a string thats ending with ?multiple? terminators like ")]}" it gets confused
+
   function fixOnType(event) {
     const change = event.contentChanges[0];
     const chgtxt = change?.text;
@@ -247,7 +249,7 @@ function activate(context) {
                                                                                                           , eb.insert(pos.translate(0, 1), " ")
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                           , lix = txt.slice(pix)
-                                                                                                                     .search(/(?<=[^,]*,[^)}\]]*)[)}\]]/) // CHECH HERE..!
+                                                                                                                     .search(/[})\]](?!.*[})\]])/)
                                                                                                           , lix >= 0 && eb.insert( pos.translate(0, lix)
                                                                                                                                  , "\n" + " ".repeat(nix)
                                                                                                                                  )
@@ -291,7 +293,7 @@ function activate(context) {
                                                                           : [-1, -1, false]
                                                 , nix >= 0 &&
                                                   act      ? editor.edit( eb => ( isFromKbd = false
-                                                                               // , eb.insert(pos.translate(0,1), " ")
+                                                                              //, eb.insert(pos.translate(0,1), " ")
                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                 ))
                                                                    .then(_ => moveCursorTo(pos.line + 1, nix + 1))
