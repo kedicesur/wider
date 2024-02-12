@@ -99,3 +99,11 @@ Date: Sun Feb 11 2024 17:36:42 GMT+0300 (GMT+03:00)
          selection_to_comma-first.gif to ./images
          SUPPORT.md for marketplace integrity
     ver: 0.2.0
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Feb 12 2024 17:02:48 GMT+0300 (GMT+03:00)
+ 
+
+    fix: single item/property arrays/objects shouldn't
+         extend to the next line with comma-first.
+    ver: 0.2.1

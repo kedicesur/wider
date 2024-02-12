@@ -51,7 +51,7 @@ If a space is placed right after the opening left bracket, Wider automatically a
 
 - ### Selection to Comma First
 
-Starting with version 0.2.0, an experimental feature has been incorporated with the purpose of transforming a chosen object or array structure into a broader comma-first layout. It is recommended that the selection closely encompasses the object or array intended for conversion. Should the selection extend to extraneous portions of your code, the algorithm's eagerness for conversion may result in unintended alterations. Prior to implementation, testing is advised, and cautious usage is encouraged.
+Starting with version 0.2.0, an experimental feature has been incorporated with the purpose of transforming a selected object or array structure into a broader comma-first layout. It is recommended that the selection closely encompasses the object or array intended for conversion. Should the selection extend to extraneous portions of your code, the algorithm's eagerness for conversion may result in unintended alterations. Prior to implementation, testing and cautious usage is advised to avoid unexpected changes in your codebase.
 
 ![selection_to_comma-first](images/selection_to_comma-first.gif)
 
