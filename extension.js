@@ -198,6 +198,10 @@ function activate(context) {
   function fixOnType(event) {
     const change = event.contentChanges[0];
     const chgtxt = change?.text;
+    const pairof = { "}": "{"
+                   , "]": "["
+                   , ")": "("
+                   };
     let pos = change.range.start,
         txt = event.document.lineAt(pos.line).text,
         act = true,
@@ -281,12 +285,13 @@ function activate(context) {
                               chgtxt === ")" ||
                               chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
                                                                           : [-1, -1, false]
-                                                , nix >= 0 &&
-                                                  act      ? editor.edit( eb => ( isFromKbd = false
-                                                                                , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                ))
-                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 1))
-                                                           : Promise.resolve()
+                                                , nix >= 0                   &&
+                                                  act                        &&
+                                                  txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( isFromKbd = false
+                                                                                                   , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                   ))
+                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                              : Promise.resolve()
                                                 )
                                               : Promise.resolve()
                             ).catch(err => console.log(err))
