@@ -207,6 +207,10 @@ function activate(context) {
   function fixOnType(event) {
     const change = event.contentChanges[0];
     const chgtxt = change?.text;
+    const pairof = { "}": "{"
+                   , "]": "["
+                   , ")": "("
+                   };
     let pos = change.range.start,                    // position of the cursor in the editor
         txt = event.document.lineAt(pos.line).text,  // text of the current line
         act = true,                                  // comma-first activator carried from indexOfIndent()
@@ -290,13 +294,14 @@ function activate(context) {
                               chgtxt === ")" ||
                               chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
                                                                           : [-1, -1, false]
-                                                , nix >= 0 &&
-                                                  act      ? editor.edit( eb => ( isFromKbd = false
-                                                                              //, eb.insert(pos.translate(0,1), " ")
-                                                                                , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                ))
-                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 1))
-                                                           : Promise.resolve()
+                                                , nix >= 0                   &&
+                                                  act                        &&
+                                                  txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( isFromKbd = false
+                                                                                                   //, eb.insert(pos.translate(0,1), " ")
+                                                                                                   , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                   ))
+                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                              : Promise.resolve()
                                                 )
                                               : Promise.resolve()
                             ).catch(err => console.log(err))
