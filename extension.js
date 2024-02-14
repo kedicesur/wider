@@ -52,6 +52,22 @@ function activate(context) {
                       );
   }
 
+  function offsetOfRightPair(txt, pos){
+    const str = suppressIrrelevantCharacters(txt.substring(pos.character));
+    const [DNSTR,UPSTR] = [")}]", "({["];
+    let cnt = 1,
+        cix = 0;
+    
+    while(cnt && ++cix < str.length){
+      DNSTR.includes(str[cix]) ? cnt--
+                               :
+      UPSTR.includes(str[cix]) ? cnt++
+                               : void 0;
+    }
+    return cnt ? -1
+               : cix;
+  }
+
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
                                       :
@@ -153,8 +169,7 @@ function activate(context) {
         pos = sel.start,
         txt = editor.document.getText(sel),
         sup = suppressIrrelevantCharacters(txt),
-        tx_ = editor.document.getText(sl_),
-        ino = 0;
+        tx_ = editor.document.getText(sl_);
 
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( ino = true
@@ -206,9 +221,9 @@ function activate(context) {
         txt = event.document.lineAt(pos.line).text,
         act = true,
         dix = -1,
-        lix = -1,
         nix = -1,
         pix = pos.character,
+        ofs = -1,
         rng;
 
     event.reason !== UNDO &&
@@ -242,9 +257,8 @@ function activate(context) {
                                                   act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( isFromKbd = false
                                                                                                           , eb.insert(pos.translate(0, 1), " ")
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                          , lix = suppressIrrelevantCharacters(txt).slice(pix)
-                                                                                                                                                   .search(/[})\]](?!.*[})\]])/)
-                                                                                                          , lix >= 0 && eb.insert( pos.translate(0, lix)
+                                                                                                          , ofs = offsetOfRightPair(txt,pos)
+                                                                                                          , ofs >= 0 && eb.insert( pos.translate(0, ofs)
                                                                                                                                  , "\n" + " ".repeat(nix)
                                                                                                                                  )
                                                                                                           ))
