@@ -59,6 +59,22 @@ function activate(context) {
                       );                                                                                       // with "_" character in the same length
   }
 
+  function offsetOfRightPair(txt, pos){
+    const str = suppressIrrelevantCharacters(txt.substring(pos.character));
+    const [DNSTR,UPSTR] = [")}]", "({["];
+    let cnt = 1,
+        cix = 0;
+    
+    while(cnt && ++cix < str.length){
+      DNSTR.includes(str[cix]) ? cnt--
+                               :
+      UPSTR.includes(str[cix]) ? cnt++
+                               : void 0;
+    }
+    return cnt ? -1
+               : cix;
+  }
+
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
                                       :
@@ -162,8 +178,7 @@ function activate(context) {
         pos = sel.start,
         txt = editor.document.getText(sel),
         sup = suppressIrrelevantCharacters(txt),
-        tx_ = editor.document.getText(sl_),
-        ino = 0;
+        tx_ = editor.document.getText(sl_);
 
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( ino = true
@@ -215,9 +230,9 @@ function activate(context) {
         txt = event.document.lineAt(pos.line).text,  // text of the current line
         act = true,                                  // comma-first activator carried from indexOfIndent()
         dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        lix = -1,                                    // last index of one of "})]"
         nix = -1,                                    // next indent index
         pix = pos.character,                         // current index of the cursor
+        ofs = -1,                                    // offset of the right matching pair "})]"
         rng;                                         // a range variable
 
     event.reason !== UNDO &&
@@ -251,9 +266,8 @@ function activate(context) {
                                                   act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( isFromKbd = false
                                                                                                           , eb.insert(pos.translate(0, 1), " ")
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                          , lix = suppressIrrelevantCharacters(txt).slice(pix)
-                                                                                                                                                   .search(/[})\]](?!.*[})\]])/)
-                                                                                                          , lix >= 0 && eb.insert( pos.translate(0, lix)
+                                                                                                          , ofs = offsetOfRightPair(txt,pos)
+                                                                                                          , ofs >= 0 && eb.insert( pos.translate(0, ofs)
                                                                                                                                  , "\n" + " ".repeat(nix)
                                                                                                                                  )
                                                                                                           ))
