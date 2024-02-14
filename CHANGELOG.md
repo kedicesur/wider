@@ -107,3 +107,13 @@ Date: Mon Feb 12 2024 17:02:48 GMT+0300 (GMT+03:00)
     fix: single item/property arrays/objects shouldn't
          extend to the next line with comma-first.
     ver: 0.2.1
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Wed Feb 14 2024 21:43:08 GMT+0300 (GMT+03:00)
+ 
+
+    add: offsetOfRightPair() function
+    fix: comma at first line of the block could break
+    rem: unused variable
+    ver: 0.2.2

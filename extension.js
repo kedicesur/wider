@@ -68,22 +68,6 @@ function activate(context) {
                : cix;
   }
 
-  function offsetOfRightPair(txt, pos){
-    const str = suppressIrrelevantCharacters(txt.substring(pos.character));
-    const [DNSTR,UPSTR] = [")}]", "({["];
-    let cnt = 1,
-        cix = 0;
-    
-    while(cnt && ++cix < str.length){
-      DNSTR.includes(str[cix]) ? cnt--
-                               :
-      UPSTR.includes(str[cix]) ? cnt++
-                               : void 0;
-    }
-    return cnt ? -1
-               : cix;
-  }
-
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
                                       :
@@ -233,14 +217,14 @@ function activate(context) {
                    , "]": "["
                    , ")": "("
                    };
-    let pos = change.range.start,                    // position of the cursor in the editor
-        txt = event.document.lineAt(pos.line).text,  // text of the current line
-        act = true,                                  // comma-first activator carried from indexOfIndent()
-        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        nix = -1,                                    // next indent index
-        pix = pos.character,                         // current index of the cursor
-        ofs = -1,                                    // offset of the right matching pair "})]"
-        rng;                                         // a range variable
+    let pos = change.range.start,
+        txt = event.document.lineAt(pos.line).text,
+        act = true,
+        dix = -1,
+        nix = -1,
+        pix = pos.character,
+        ofs = -1,
+        rng;
 
     event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
