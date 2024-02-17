@@ -109,7 +109,6 @@ Date: Mon Feb 12 2024 17:02:48 GMT+0300 (GMT+03:00)
     ver: 0.2.1
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
-Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Wed Feb 14 2024 21:43:08 GMT+0300 (GMT+03:00)
  
 
@@ -117,3 +116,13 @@ Date: Wed Feb 14 2024 21:43:08 GMT+0300 (GMT+03:00)
     fix: comma at first line of the block could break
     rem: unused variable
     ver: 0.2.2
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 17 2024 15:04:31 GMT+0300 (GMT+03:00)
+ 
+
+    fix: made ternary to not work in objects due to
+         conflicting colon operator in objects.
+         ternary question mark can have text after
+    rem: forgotten unused variable and some renamings
+    ver: 0.2.3
