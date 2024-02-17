@@ -8,8 +8,8 @@ Array.prototype.log = function(){
 
 function activate(context) {
   const UNDO    = 1;
-  let config    = vscode.workspace.getConfiguration("editor"),
-      editor    = vscode.window.activeTextEditor,
+  const config  = vscode.workspace.getConfiguration("editor");
+  let editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
       freeToFix = true,
       cflActive = language === "javascript" || language === "typescript",
@@ -156,7 +156,7 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    let mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
+    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
@@ -173,12 +173,12 @@ function activate(context) {
   // Formatting functions
 
   function commaFirstSelection(editor){
-    let sel = editor.selection,
-        sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity)),
-        pos = sel.start,
-        txt = editor.document.getText(sel),
-        sup = suppressIrrelevantCharacters(txt),
-        tx_ = editor.document.getText(sl_);
+    const sel = editor.selection;
+    const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
+    const txt = editor.document.getText(sel);
+    const tx_ = editor.document.getText(sl_);
+    const sup = suppressIrrelevantCharacters(txt);
+    let pos = sel.start;
 
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
@@ -225,14 +225,13 @@ function activate(context) {
                    , "]": "["
                    , ")": "("
                    };
-    let pos = change.range.start,                    // position of the cursor in the editor
-        txt = event.document.lineAt(pos.line).text,  // text of the current line
-        act = true,                                  // comma-first activator carried from indexOfIndent()
-        dix = -1,                                    // index of the variable name if "let" or "var" definition exists
-        nix = -1,                                    // next indent index
-        pix = pos.character,                         // current index of the cursor
-        ofs = -1,                                    // offset of the right matching pair "})]"
-        rng;                                         // a range variable
+    const pos    = change.range.start;                   // position of the cursor in the editor
+    const txt    = event.document.lineAt(pos.line).text  // text of the current line
+    const pix    = pos.character;                        // current index of the cursor
+    let act = true,                                      // comma-first activator carried from indexOfIndent()
+        dix = -1,                                        // index of the variable name if "let" or "var" definition exists
+        nix = -1,                                        // next indent index
+        ofs = -1;                                        // offset of the right matching pair "})]"
 
     event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
