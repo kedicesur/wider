@@ -32,9 +32,30 @@ function activate(context) {
                   , vscode.commands.registerTextEditorCommand( "wider.commaFirstSelection"
                                                              , commaFirstSelection
                                                              )
+                  , vscode.commands.registerTextEditorCommand( "wider.typewriter"
+                                                             , typewriter
+                                                             )
                   );
 
 // Utility functions
+
+  function typewriter(editor){
+    const sel = editor.selection;
+    const chs = editor.document.getText(sel)
+                               .split("");
+    let pos = editor.selection.start,
+        sti;
+    chs.reduce( (p,c) => p.then(_ => fixNext = new Promise(v => ( sti = setTimeout( c => ( _resolve = v
+                                                                                         , editor.edit(eb => eb.insert(pos,c))
+                                                                                         , clearTimeout(sti)
+                                                                                         )
+                                                                                  , 50 + Math.random()*140
+                                                                                  , c
+                                                                                  ))))
+                          .then(_ => pos = editor.selection.active.translate(0,1))
+              , editor.edit(eb => eb.replace(sel,""))
+              )
+  }
 
   function updateActivators(){
     const widerConfig = vscode.workspace.getConfiguration("wider");

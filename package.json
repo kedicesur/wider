@@ -58,8 +58,15 @@
                  , "commands": [ { "command": "wider.commaFirstSelection"
                                  , "title": "Wider: Seletection to Comma-First"
                                  }
+                               , { "command": "wider.typewriter"
+                                 , "title": "Wider: Selection to Typewrite"
+                                 }
                                ]
                  , "menus": { "editor/context": [ { "command": "wider.commaFirstSelection"
+                                                  , "when": "editorHasSelection"
+                                                  , "group": "2_modification"
+                                                  }
+                                                , { "command": "wider.typewriter"
                                                   , "when": "editorHasSelection"
                                                   , "group": "2_modification"
                                                   }
