@@ -247,19 +247,20 @@ function activate(context) {
                                                                             )
                                                                           : Promise.resolve()
                                               :
-                              chgtxt === "?"  ? tefActive         && 
-                                                txt[pix-1] === " " ? ( nix = txt.lastIndexOf(":", pix)
-                                                                     , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                    , eb.insert( pos.translate(0, 1)
-                                                                                                               , " "
-                                                                                                               )
-                                                                                                    , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                               , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
-                                                                                                               )
-                                                                                                    ))
-                                                                                : Promise.resolve()
-                                                                     )
-                                                                   : Promise.resolve()
+                              chgtxt === "?"  ? tefActive                &&
+                                                txt[pix-1] === " "       &&
+                                                pos === bypassObject(pos) ? ( nix = txt.lastIndexOf(":", pix)
+                                                                            , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                                            , eb.insert( pos.translate(0, 1)
+                                                                                                                       , " "
+                                                                                                                       )
+                                                                                                            , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                                       , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                                       )
+                                                                                                            ))
+                                                                                        : Promise.resolve()
+                                                                            )
+                                                                          : Promise.resolve()
                                               :
                               chgtxt === ","  ? ( [nix, dix, act] = cflActive ? indexOfIndent(txt,pos)
                                                                               : [-1, -1, false]
