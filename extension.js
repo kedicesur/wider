@@ -6,7 +6,7 @@ function activate(context) {
   let config    = vscode.workspace.getConfiguration("editor"),
       editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
-      isFromKbd = true,
+      freeToFix = true,
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,
@@ -16,7 +16,7 @@ function activate(context) {
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  isFromKbd               && fixOnType(e)
+                                                                  freeToFix               && fixOnType(e)  // see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -129,7 +129,7 @@ function activate(context) {
     let pln = pos.line,
         pch = pos.character,
         cnt = 1,
-        txt = editor.document.lineAt(pln).text.slice(0,pch);
+        txt = editor.document.lineAt(pln).text.substring(0,pch);
 
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
@@ -143,8 +143,8 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? /\)\s*\{/.test(txt.slice(0,pch+1)) ? pos
-                                                     : new vscode.Position(pln,pch)
+    return !cnt ? /\)\s*\{/.test(txt.substring(0,pch+1)) ? pos
+                                                         : new vscode.Position(pln,pch)
                 : pos;
   }
 
@@ -172,8 +172,7 @@ function activate(context) {
         tx_ = editor.document.getText(sl_);
 
     txt.split("")
-       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( ino = true
-                                                      , d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
+       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
                                                       , d[1].push(c+" ","")
                                                       )
                                                     :
@@ -230,7 +229,7 @@ function activate(context) {
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
                                                 pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
-                                                                            , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
+                                                                            , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                                            , eb.replace( new vscode.Range(pos,pos.translate(0,1))
                                                                                                                        , "\n" + " ".repeat(nix) + ": "
                                                                                                                        )
@@ -239,22 +238,25 @@ function activate(context) {
                                                                             )
                                                                           : Promise.resolve()
                                               :
-                              chgtxt === "?"  ? tefActive         && 
-                                                txt[pix-1] === " " ? ( nix = txt.lastIndexOf(":")
-                                                                     , nix >= 0 ? ( rng = new vscode.Range(pos.translate(0,nix - pix + 1), pos.translate(0,1))
-                                                                                  , txt = editor.document.getText(rng).slice(0,-1).trim() + " "
-                                                                                  , editor.edit(eb => ( isFromKbd = false
-                                                                                                      , eb.replace(rng, "\n" + (txt.length < nix ? " ".repeat(nix - txt.length) : "") + txt + "? ")
-                                                                                                      ))
-                                                                                  )
-                                                                                : Promise.resolve()
-                                                                     )
-                                                                   : Promise.resolve()
+                              chgtxt === "?"  ? tefActive                &&
+                                                txt[pix-1] === " "       &&
+                                                pos === bypassObject(pos) ? ( nix = txt.lastIndexOf(":", pix)
+                                                                            , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                                            , eb.insert( pos.translate(0, 1)
+                                                                                                                       , " "
+                                                                                                                       )
+                                                                                                            , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                                       , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                                       )
+                                                                                                            ))
+                                                                                        : Promise.resolve()
+                                                                            )
+                                                                          : Promise.resolve()
                                               :
                               chgtxt === ","  ? ( [nix, dix, act] = cflActive ? indexOfIndent(txt,pos)
                                                                               : [-1, -1, false]
                                                 , nix >= 0 &&
-                                                  act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( isFromKbd = false
+                                                  act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
                                                                                                           , eb.insert(pos.translate(0, 1), " ")
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                           , ofs = offsetOfRightPair(txt,pos)
@@ -263,13 +265,13 @@ function activate(context) {
                                                                                                                                  )
                                                                                                           ))
                                                                                               .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                      : editor.edit( eb => ( isFromKbd = false
+                                                                                      : editor.edit( eb => ( freeToFix = false
                                                                                                            , eb.insert(pos.translate(0,1), " ")
                                                                                                            , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                            ))
                                                                                               .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                            :
-                                                  dix >= 0 ? editor.edit(eb => ( isFromKbd = false
+                                                  dix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix))
                                                                                ))
                                                                    .then(_  => moveCursorTo(pos.line + 1, dix))
@@ -278,7 +280,7 @@ function activate(context) {
                                               :
                               chgtxt === "."  ? smcActive          &&
                                                 txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
-                                                                     , nix >= 0 && editor.edit(( isFromKbd = false
+                                                                     , nix >= 0 && editor.edit(( freeToFix = false
                                                                                                , eb => eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                ))
                                                                      )
@@ -286,7 +288,7 @@ function activate(context) {
                                               :
                               chgtxt === "{}" ? ( nix = difActive ? txt.search(/function.*\(/)
                                                                   : -1
-                                                , nix >= 0 ? editor.edit(eb => ( isFromKbd = false
+                                                , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert( pos.translate(0,1)
                                                                                           , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
                                                                                           )
@@ -301,7 +303,7 @@ function activate(context) {
                                                                           : [-1, -1, false]
                                                 , nix >= 0                   &&
                                                   act                        &&
-                                                  txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( isFromKbd = false
+                                                  txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( freeToFix = false
                                                                                                    , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                    ))
                                                                                       .then(_ => moveCursorTo(pos.line + 1, nix + 1))
@@ -309,7 +311,7 @@ function activate(context) {
                                                 )
                                               : Promise.resolve()
                             ).catch(err => console.log(err))
-                             .finally(_ => ( isFromKbd = true
+                             .finally(_ => ( freeToFix = true
                                            , _resolve()
                                            ))
                           : _resolve()
