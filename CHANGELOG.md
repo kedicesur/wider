@@ -126,3 +126,13 @@ Date: Sat Feb 17 2024 15:04:31 GMT+0300 (GMT+03:00)
          ternary question mark can have text after
     rem: forgotten unused variable and some renamings
     ver: 0.2.3
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Feb 18 2024 13:36:20 GMT+0300 (GMT+03:00)
+ 
+
+    fix: menu typos and remove unnecessary parens.
+         moved UNDO & REDO check to event listener.
+         invoked the dispose function :))
+    rem: unnecessary const UNDO
+    ver: 0.2.4
