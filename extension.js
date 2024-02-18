@@ -7,7 +7,6 @@ Array.prototype.log = function(){
                       }
 
 function activate(context) {
-  const UNDO    = 1;
   const config  = vscode.workspace.getConfiguration("editor");
   let editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
@@ -21,7 +20,8 @@ function activate(context) {
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  freeToFix               && fixOnType(e)  // see https://github.com/microsoft/vscode/issues/204018
+                                                                  e.reason === void 0     &&              // not UNDO (1) or REDO (2)
+                                                                  freeToFix               && fixOnType(e) // see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -32,31 +32,9 @@ function activate(context) {
                   , vscode.commands.registerTextEditorCommand( "wider.commaFirstSelection"
                                                              , commaFirstSelection
                                                              )
-                  , vscode.commands.registerTextEditorCommand( "wider.typewriter"
-                                                             , typewriter
-                                                             )
                   );
 
 // Utility functions
-
-  function typewriter(editor){
-    const sel = editor.selection;
-    const chs = editor.document.getText(sel)
-                               .split("");
-    let pos = editor.selection.start,
-        sti;
-    chs.reduce( (p,c) => p.then(_ => fixNext = new Promise(v => sti = setTimeout( c => ( _resolve = v
-                                                                                       , editor.edit(eb => eb.insert(pos,c))
-                                                                                       , clearTimeout(sti)
-                                                                                       )
-                                                                                , 50 + Math.random()*140
-                                                                                , c
-                                                                                )))
-                          .then(_ => pos = editor.selection.active.translate(0,1))
-              , editor.edit(eb => eb.replace(sel,""))
-              )
-       .catch(e => console.log(e));
-  }
 
   function updateActivators(){
     const widerConfig = vscode.workspace.getConfiguration("wider");
@@ -255,7 +233,6 @@ function activate(context) {
         nix = -1,                                        // next indent index
         ofs = -1;                                        // offset of the right matching pair "})]"
 
-    event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
                                                 pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
@@ -272,14 +249,14 @@ function activate(context) {
                                                 txt[pix-1] === " "       &&
                                                 pos === bypassObject(pos) ? ( nix = txt.lastIndexOf(":", pix)
                                                                             , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                            , eb.insert( pos.translate(0, 1)
-                                                                                                                       , " "
-                                                                                                                       )
-                                                                                                            , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                                       , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
-                                                                                                                       )
-                                                                                                            ))
-                                                                                        : Promise.resolve()
+                                                                                                           , eb.insert( pos.translate(0, 1)
+                                                                                                                      , " "
+                                                                                                                      )
+                                                                                                           , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                                      , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                                      )
+                                                                                                           ))
+                                                                                       : Promise.resolve()
                                                                             )
                                                                           : Promise.resolve()
                                               :
@@ -353,7 +330,7 @@ function activate(context) {
 }
 
 function deactivate(){
-  DISPOSABLES.forEach(disposable => disposable.dispose);
+  DISPOSABLES.forEach(disposable => disposable.dispose());
 }
 
 module.exports = {
