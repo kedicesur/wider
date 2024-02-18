@@ -45,16 +45,17 @@ function activate(context) {
                                .split("");
     let pos = editor.selection.start,
         sti;
-    chs.reduce( (p,c) => p.then(_ => fixNext = new Promise(v => ( sti = setTimeout( c => ( _resolve = v
-                                                                                         , editor.edit(eb => eb.insert(pos,c))
-                                                                                         , clearTimeout(sti)
-                                                                                         )
-                                                                                  , 50 + Math.random()*140
-                                                                                  , c
-                                                                                  ))))
+    chs.reduce( (p,c) => p.then(_ => fixNext = new Promise(v => sti = setTimeout( c => ( _resolve = v
+                                                                                       , editor.edit(eb => eb.insert(pos,c))
+                                                                                       , clearTimeout(sti)
+                                                                                       )
+                                                                                , 50 + Math.random()*140
+                                                                                , c
+                                                                                )))
                           .then(_ => pos = editor.selection.active.translate(0,1))
               , editor.edit(eb => eb.replace(sel,""))
               )
+       .catch(e => console.log(e));
   }
 
   function updateActivators(){

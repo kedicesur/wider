@@ -56,7 +56,7 @@
                                                     }
                                     }
                  , "commands": [ { "command": "wider.commaFirstSelection"
-                                 , "title": "Wider: Seletection to Comma-First"
+                                 , "title": "Wider: Selection to Comma-First"
                                  }
                                , { "command": "wider.typewriter"
                                  , "title": "Wider: Selection to Typewrite"
