@@ -1,7 +1,7 @@
 { "name": "wider"
 , "displayName": "Wider - JS Code Formatter"
 , "description": "Wider format for JS/TS"
-, "version": "0.2.3"
+, "version": "0.2.4"
 , "publisher": "Redu",
   "author": { "name": "Ömer Kaşdarma"
             , "url": "https://github.com/kedicesur"
@@ -58,15 +58,8 @@
                  , "commands": [ { "command": "wider.commaFirstSelection"
                                  , "title": "Wider: Selection to Comma-First"
                                  }
-                               , { "command": "wider.typewriter"
-                                 , "title": "Wider: Selection to Typewrite"
-                                 }
                                ]
                  , "menus": { "editor/context": [ { "command": "wider.commaFirstSelection"
-                                                  , "when": "editorHasSelection"
-                                                  , "group": "2_modification"
-                                                  }
-                                                , { "command": "wider.typewriter"
                                                   , "when": "editorHasSelection"
                                                   , "group": "2_modification"
                                                   }
