@@ -2,9 +2,8 @@ const vscode = require('vscode');
 const DISPOSABLES = [];
 
 function activate(context) {
-  const UNDO    = 1;
-  let config    = vscode.workspace.getConfiguration("editor"),
-      editor    = vscode.window.activeTextEditor,
+  const config  = vscode.workspace.getConfiguration("editor");
+  let editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
       freeToFix = true,
       cflActive = language === "javascript" || language === "typescript",
@@ -16,7 +15,8 @@ function activate(context) {
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  freeToFix               && fixOnType(e)  // see https://github.com/microsoft/vscode/issues/204018
+                                                                  e.reason === void 0     &&              // not UNDO (1) or REDO (2)
+                                                                  freeToFix               && fixOnType(e) // see https://github.com/microsoft/vscode/issues/204018
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -149,7 +149,7 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    let mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
+    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
@@ -164,12 +164,12 @@ function activate(context) {
   }
 
   function commaFirstSelection(editor){
-    let sel = editor.selection,
-        sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity)),
-        pos = sel.start,
-        txt = editor.document.getText(sel),
-        sup = suppressIrrelevantCharacters(txt),
-        tx_ = editor.document.getText(sl_);
+    const sel = editor.selection;
+    const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
+    const txt = editor.document.getText(sel);
+    const tx_ = editor.document.getText(sl_);
+    const sup = suppressIrrelevantCharacters(txt);
+    let pos = sel.start;
 
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
@@ -216,16 +216,14 @@ function activate(context) {
                    , "]": "["
                    , ")": "("
                    };
-    let pos = change.range.start,
-        txt = event.document.lineAt(pos.line).text,
-        act = true,
+    const pos    = change.range.start;
+    const txt    = event.document.lineAt(pos.line).text;
+    const pix    = pos.character;
+    let act = true,
         dix = -1,
         nix = -1,
-        pix = pos.character,
-        ofs = -1,
-        rng;
+        ofs = -1;
 
-    event.reason !== UNDO &&
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
                                                 pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
@@ -242,14 +240,14 @@ function activate(context) {
                                                 txt[pix-1] === " "       &&
                                                 pos === bypassObject(pos) ? ( nix = txt.lastIndexOf(":", pix)
                                                                             , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                            , eb.insert( pos.translate(0, 1)
-                                                                                                                       , " "
-                                                                                                                       )
-                                                                                                            , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                                       , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
-                                                                                                                       )
-                                                                                                            ))
-                                                                                        : Promise.resolve()
+                                                                                                           , eb.insert( pos.translate(0, 1)
+                                                                                                                      , " "
+                                                                                                                      )
+                                                                                                           , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                                      , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                                      )
+                                                                                                           ))
+                                                                                       : Promise.resolve()
                                                                             )
                                                                           : Promise.resolve()
                                               :
@@ -323,7 +321,7 @@ function activate(context) {
 }
 
 function deactivate(){
-  DISPOSABLES.forEach(disposable => disposable.dispose);
+  DISPOSABLES.forEach(disposable => disposable.dispose());
 }
 
 module.exports = {
