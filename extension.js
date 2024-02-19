@@ -95,22 +95,20 @@ function activate(context) {
       txt = suppressIrrelevantCharacters(txt);
       while(cnt && pch-- > 0){
         DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
+                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
-                                                                 , pln = pos.line
-                                                                 , pch = pos.character
+                                                                 , pln = tps.line
+                                                                 , pch = tps.character
                                                                  )
                                                                : cnt--
                                                  )
                                                : cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
+                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
-                                                                 , pln = pos.line
-                                                                 , pch = pos.character
+                                                                 , pln = tps.line
+                                                                 , pch = tps.character
                                                                  )
                                                                : cnt++
                                                  )
