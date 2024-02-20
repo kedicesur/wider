@@ -98,6 +98,23 @@ function activate(context) {
                                                          : new vscode.Position(pln,pch)
                 : pos;
   }
+
+  function alignDeclaration(dps, pos, lst){
+    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
+    const dix = dps.character;
+    const lns = editor.document.getText(sel)
+                               .split(/\n+/);
+    const ixs = lns.map(l => l.indexOf("="));
+    const max = Math.max(...ixs);
+    const txt = lns[0].slice(0,dix) + lns.reduce( (s,l,i) => ixs[i] >= 0 ? s + l.slice(dix,ixs[i]) + " ".repeat(max-ixs[i]) + l.slice(ixs[i]) + "\n" + " ".repeat(lst && i === lns.length - 1 ? lns[0].search(/\b[let|var]/)
+                                                                                                                                                                                              : dix)
+                                                                         : s + l.slice(dix) + "\n" + " ".repeat(dix)
+                                                , ""
+                                                );
+    return editor.edit(eb => ( freeToFix = false
+                             , eb.replace(sel,txt)
+                             ));
+  }
  
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
@@ -225,15 +242,10 @@ function activate(context) {
                    };
     const pos    = change.range.start;                   // position of the cursor in the editor
     const pix    = pos.character;                        // current index of the cursor
-    let txt = event.document.lineAt(pos.line).text,      // text of the current line
-        act = true,                                      // comma-first activator carried from indexOfIndent()
+    const txt    = event.document.lineAt(pos.line).text; // text of the current line
+    let act = true,                                      // comma-first activator carried from indexOfIndent()
         nix = -1,                                        // next indent index
-        ofs = -1,                                        // offset of the right matching pair "})]"
-        dix = -1,                                        // index of the variable name if "let" or "var" definition exists
-        sel,                                             // selection used for decleration alignment
-        lns,                                             // lines of the selection used for decleration alignment
-        ixs,                                             // indices of the assignmet operator "="
-        max;                                             // maximum of ixs
+        ofs = -1;                                        // offset of the right matching pair "})]"
 
     !isDontCare(txt, pos) &&
     !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
@@ -280,19 +292,13 @@ function activate(context) {
                                                                                                            ))
                                                                                               .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                            :
-                                                  dps ? ( sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1))
-                                                        , dix = dps.character
-                                                        , lns = editor.document.getText(sel)
-                                                                               .split(/\n+/)
-                                                        , ixs = lns.map(l => l.indexOf("="))
-                                                        , max = Math.max(...ixs)
-                                                        , txt = lns[0].slice(0,dix) + lns.reduce( (s,l,i) => s + l.slice(dix,ixs[i]) + " ".repeat(max-ixs[i]) + l.slice(ixs[i]) + "\n" + " ".repeat(dix)
-                                                                                                , ""
-                                                                                                )
-                                                        , editor.edit(eb => ( freeToFix = false
-                                                                            , eb.replace(sel,txt)
-                                                                            ))
-                                                        )
+                                                  dps      ? alignDeclaration(dps, pos, false)
+                                                           : Promise.resolve()
+                                                )
+                                              :
+                              chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos)[1]
+                                                                  : false
+                                                , dps ? alignDeclaration(dps, pos, true)
                                                       : Promise.resolve()
                                                 )
                                               :
