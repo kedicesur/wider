@@ -136,3 +136,27 @@ Date: Sun Feb 18 2024 13:36:20 GMT+0300 (GMT+03:00)
          invoked the dispose function :))
     rem: unnecessary const UNDO
     ver: 0.2.4
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Feb 19 2024 22:24:01 GMT+0300 (GMT+03:00)
+ 
+
+    fix: removed needless assignment to pos argument
+         of indexOfIndent for ternaries. This way pos
+         stays constant. This might be useful if and
+         when i decide to overload this function with
+         an alignment job for variable assignments and
+         object colons. Then i might decide to rewrite
+         the whole thing to work on a better structure
+         rather than the text in the editor for a much
+         more efficient formatting. I think that will
+         mark the v1.0.0
+    add: declaration alingment is ok when terminated
+         with ";" token. However it's getting more and
+         more complex to handle this way. As mentioned
+         above it's best to come up with a better
+         mapping of the code text to solve all kinds
+         of token based relationships. Road to v1.0.0
+    mod: dix, the declaration index replaced with dps;
+         the declaration position.
+    ver: 0.2.5
