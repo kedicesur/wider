@@ -68,62 +68,6 @@ function activate(context) {
                : cix;
   }
 
-  function indexOfIndent(txt, pos, mod){
-    const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
-                                      :
-                          mod === "." ||
-                          mod === ")" ? [")", "("]
-                                      :
-                          mod === "}" ? ["}", "{"]
-                                      :
-                          mod === "]" ? ["]", "["]
-                         /*Otherwise*/: [")}]", "({["];
-    let pln = pos.line,
-        pch = pos.character,
-        cnt = 1,
-        tps,
-        dix;
-        
-    while(cnt && pln >= 0){
-      txt = suppressIrrelevantCharacters(txt);
-      while(cnt && pch-- > 0){
-        DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
-                                                                                                                     .text)
-                                                                 , pln = pos.line
-                                                                 , pch = pos.character
-                                                                 )
-                                                               : cnt--
-                                                 )
-                                               : cnt--
-                                 :
-        UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( pos = tps
-                                                                 , txt = suppressIrrelevantCharacters(editor.document.lineAt(pos.line)
-                                                                                                                     .text)
-                                                                 , pln = pos.line
-                                                                 , pch = pos.character
-                                                                 )
-                                                               : cnt++
-                                                 )
-                                               : cnt++
-                                 : void 0;
-      }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
-             , dix >= 0 && (cnt = 0)
-             );
-      cnt && pln-- && ( txt = editor.document.lineAt(pln).text
-                      , pch = txt.length
-                      );
-    }
-    return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), -1, false] 
-                              :
-                  dix >= 0    ? [-1, dix, false]
-                              : [pch, -1, txt[pch+1] === " "]
-                : [-1, -1, false];
-  }
-
   function bypassObject(pos){
     const [UPSTR,DNSTR] = ["}", "{"];
     let pln = pos.line,
@@ -146,6 +90,77 @@ function activate(context) {
     return !cnt ? /\)\s*\{/.test(txt.substring(0,pch+1)) ? pos
                                                          : new vscode.Position(pln,pch)
                 : pos;
+  }
+
+  function alignDeclaration(dps, pos, lst){
+    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
+    const dix = dps.character;
+    const lns = editor.document.getText(sel)
+                               .split(/\n+/);
+    const ixs = lns.map(l => l.indexOf("="));
+    const max = Math.max(...ixs);
+    const txt = lns[0].slice(0,dix) + lns.reduce( (s,l,i) => ixs[i] >= 0 ? s + l.slice(dix,ixs[i]) + " ".repeat(max-ixs[i]) + l.slice(ixs[i]) + "\n" + " ".repeat(lst && i === lns.length - 1 ? lns[0].search(/\b[let|var]/)
+                                                                                                                                                                                              : dix)
+                                                                         : s + l.slice(dix) + "\n" + " ".repeat(dix)
+                                                , ""
+                                                );
+    return editor.edit(eb => ( freeToFix = false
+                             , eb.replace(sel,txt)
+                             ));
+  }
+ 
+  function indexOfIndent(txt, pos, mod){
+    const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
+                                      :
+                          mod === "." ||
+                          mod === ")" ? [")", "("]
+                                      :
+                          mod === "}" ? ["}", "{"]
+                                      :
+                          mod === "]" ? ["]", "["]
+                         /*Otherwise*/: [")}]", "({["];
+    let pln = pos.line,
+        pch = pos.character,
+        cnt = 1,
+        tps,
+        dix;
+        
+    while(cnt && pln >= 0){
+      txt = suppressIrrelevantCharacters(txt);
+      while(cnt && pch-- > 0){
+        DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
+                                                                                                                     .text)
+                                                                 , pln = tps.line
+                                                                 , pch = tps.character
+                                                                 )
+                                                               : cnt--
+                                                 )
+                                               : cnt--
+                                 :
+        UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
+                                                                                                                     .text)
+                                                                 , pln = tps.line
+                                                                 , pch = tps.character
+                                                                 )
+                                                               : cnt++
+                                                 )
+                                               : cnt++
+                                 : void 0;
+      }
+      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
+             , dix >= 0 && (cnt = 0)
+             );
+      cnt && pln-- && ( txt = editor.document.lineAt(pln).text
+                      , pch = txt.length
+                      );
+    }
+    return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false] 
+                              :
+                  dix >= 0    ? [-1, new vscode.Position(pln,dix), false]
+                              : [pch, false, txt[pch+1] === " "]
+                : [-1, false, false];
   }
 
   function isDontCare(txt, pos){
@@ -220,7 +235,6 @@ function activate(context) {
     const txt    = event.document.lineAt(pos.line).text;
     const pix    = pos.character;
     let act = true,
-        dix = -1,
         nix = -1,
         ofs = -1;
 
@@ -251,7 +265,7 @@ function activate(context) {
                                                                             )
                                                                           : Promise.resolve()
                                               :
-                              chgtxt === ","  ? ( [nix, dix, act] = cflActive ? indexOfIndent(txt,pos)
+                              chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
                                                                               : [-1, -1, false]
                                                 , nix >= 0 &&
                                                   act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
@@ -269,11 +283,14 @@ function activate(context) {
                                                                                                            ))
                                                                                               .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                            :
-                                                  dix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                               , eb.insert(pos.translate(0,1), "\n" + " ".repeat(dix))
-                                                                               ))
-                                                                   .then(_  => moveCursorTo(pos.line + 1, dix))
+                                                  dps      ? alignDeclaration(dps, pos, false)
                                                            : Promise.resolve()
+                                                )
+                                              :
+                              chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos)[1]
+                                                                  : false
+                                                , dps ? alignDeclaration(dps, pos, true)
+                                                      : Promise.resolve()
                                                 )
                                               :
                               chgtxt === "."  ? smcActive          &&
