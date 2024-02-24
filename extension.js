@@ -125,6 +125,8 @@ function activate(context) {
                           mod === "}" ? ["}", "{"]
                                       :
                           mod === "]" ? ["]", "["]
+                                      :
+                          mod === ";" ? [";", ";"]
                          /*Otherwise*/: [")}]", "({["];
     let pln = pos.line,
         pch = pos.character,
@@ -165,6 +167,9 @@ function activate(context) {
     }
     return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false] 
                               :
+                  mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
+                                         : [-1, -1, false]
+                              : 
                   dix >= 0    ? [-1, new vscode.Position(pln,dix), false]
                               : [pch, false, txt[pch+1] === " "]
                 : [-1, false, false];
@@ -296,7 +301,7 @@ function activate(context) {
                                                            : Promise.resolve()
                                                 )
                                               :
-                              chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos)[1]
+                              chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos,";")[1]
                                                                   : false
                                                 , dps ? alignDeclaration(dps, pos, true)
                                                       : Promise.resolve()
