@@ -160,3 +160,10 @@ Date: Mon Feb 19 2024 22:24:01 GMT+0300 (GMT+03:00)
     mod: dix, the declaration index replaced with dps;
          the declaration position.
     ver: 0.2.5
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 24 2024 16:30:22 GMT+0300 (GMT+03:00)
+ 
+
+    fix: ";" breaks bad. Seems fixed.
+    ver: 0.2.6
