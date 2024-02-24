@@ -89,6 +89,7 @@ Nothing so far. Feel free to register encountered [issues](https://github.com/ke
 ## Things to Remember
 
 * Even if you have enabled the "comma-first" at the settings, leave a space after `{ `, `[ ` or `( ` to make the comma-first functionality effective. This way if it's activated in the settings, you still have the flexibility to enable / disable it for the individual object that you are typing in.
+* As of v2.0.5 the comma-first functionality comes with an additional **Declarations Alignment** functionality. When following a single `let` or `var` keyword, multiple variable declarations and assignments are done per line which are separated by a comma, all assignment operators `=` in that declaration group gets alligned according to the longest variable name.
 * Regexes are important. When you are typing a regex you best start typing inbetween two forward slashes `/-> type here/` so that any delimiter being typed in the Regex wouldn't trigger a fake indent involuntarily.
 * Multiline comments, those start with `/*` and end with `*/` are not taken care of as of now.
 
