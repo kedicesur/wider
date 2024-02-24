@@ -51,7 +51,9 @@ If a space is placed right after the opening left bracket, Wider automatically a
 
 - ### Selection to Comma First
 
-Starting with version 0.2.0, an experimental feature has been incorporated with the purpose of transforming a selected object or array structure into a broader comma-first layout. It is recommended that the selection closely encompasses the object or array intended for conversion. Should the selection extend to extraneous portions of your code, the algorithm's eagerness for conversion may result in unintended alterations. Prior to implementation, testing and cautious usage is advised to avoid unexpected changes in your codebase.
+Starting with version 0.2.0, an experimental feature has been incorporated with the purpose of transforming a selected object or array structure into a broader comma-first layout. It is recommended that the selection closely encompasses the object or array intended for conversion. Should the selection extend to extraneous portions of your code, the algorithm's eagerness for conversion may result in unintended alterations. Also as of current version all comments in the selection are removed. This is a backlog and will be fixed.
+
+Prior to implementation, testing and cautious usage is advised to avoid unexpected changes in your codebase.
 
 ![selection_to_comma-first](images/selection_to_comma-first.gif)
 
@@ -87,6 +89,7 @@ Nothing so far. Feel free to register encountered [issues](https://github.com/ke
 ## Things to Remember
 
 * Even if you have enabled the "comma-first" at the settings, leave a space after `{ `, `[ ` or `( ` to make the comma-first functionality effective. This way if it's activated in the settings, you still have the flexibility to enable / disable it for the individual object that you are typing in.
+* As of v2.0.5 the comma-first functionality comes with an additional **Declarations Alignment** functionality. When following a single `let` or `var` keyword, multiple variable declarations and assignments are done per line which are separated by a comma, all assignment operators `=` in that declaration group gets alligned according to the longest variable name.
 * Regexes are important. When you are typing a regex you best start typing inbetween two forward slashes `/-> type here/` so that any delimiter being typed in the Regex wouldn't trigger a fake indent involuntarily.
 * Multiline comments, those start with `/*` and end with `*/` are not taken care of as of now.
 

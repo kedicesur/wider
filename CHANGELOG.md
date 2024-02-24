@@ -167,3 +167,15 @@ Date: Sat Feb 24 2024 16:30:22 GMT+0300 (GMT+03:00)
 
     fix: ";" breaks bad. Seems fixed.
     ver: 0.2.6
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sat Feb 24 2024 17:41:33 GMT+0300 (GMT+03:00)
+ 
+
+    fix: Breaking Selection to Comma First when there
+         are single line comments in the selection is
+         now working at the cost of removing the
+         comments as a quick fix. Keeping the comments
+         is a backlog and will be implemented in next
+         releases.
+    ver: 0.2.7
