@@ -54,7 +54,7 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g // Suppresses the regexp, string literal
+    return str.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm // Suppresses the regexp, string literal
                       , match => "_".repeat(match.length)                                                      // and comment parts of the given string
                       );                                                                                       // with "_" character in the same length
   }
@@ -168,7 +168,7 @@ function activate(context) {
     return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false] 
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
-                                         : [-1, -1, false]
+                                         : [-1, false, false]
                               : 
                   dix >= 0    ? [-1, new vscode.Position(pln,dix), false]
                               : [pch, false, txt[pch+1] === " "]
@@ -195,7 +195,8 @@ function activate(context) {
   function commaFirstSelection(editor){
     const sel = editor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
-    const txt = editor.document.getText(sel);
+    const txt = editor.document.getText(sel)
+                               .replace(/\/\/.*$/gm,"");
     const tx_ = editor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(txt);
     let pos = sel.start;
