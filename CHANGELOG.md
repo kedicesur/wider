@@ -179,3 +179,17 @@ Date: Sat Feb 24 2024 17:41:33 GMT+0300 (GMT+03:00)
          is a backlog and will be implemented in next
          releases.
     ver: 0.2.7
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Feb 25 2024 18:55:41 GMT+0300 (GMT+03:00)
+
+
+    fix: .alignDeclaration() fixed.
+         Breaking Selection to Comma First when there
+         are single line comments in the selection is
+         now properly working at the cost of removing
+         the comments as a quick fix. In next releases
+         a better fix will be implemented.
+    rem: unused variables and logs.
+    ver: 0.2.8
+     
