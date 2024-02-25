@@ -203,8 +203,8 @@ function activate(context) {
                                .replace(/(?<!:)\/\/.*$/gm,"");
     const tx_ = editor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(txt);
-    let pos = sel.start,
-        cmt;
+    let pos = sel.start;
+    
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
                                                       , d[1].push(c+" ","")
@@ -232,7 +232,6 @@ function activate(context) {
               , [[],[]]
               )
        .reduce((p,c) => p.concat(c))
-       .log()
        .reduce( (p,s) => s !== "" ? p.then(_ => ( fixNext = new Promise(resolve => _resolve = resolve)
                                                 , editor.edit(eb => eb.insert(pos,s))
                                                 , fixNext
