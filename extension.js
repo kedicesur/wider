@@ -94,16 +94,20 @@ function activate(context) {
 
   function alignDeclaration(dps, pos, lst){
     const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
-    const dix = dps.character;
     const lns = editor.document.getText(sel)
                                .split(/\n+/);
-    const ixs = lns.map(l => l.indexOf("="));
+    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
     const max = Math.max(...ixs);
-    const txt = lns[0].slice(0,dix) + lns.reduce( (s,l,i) => ixs[i] >= 0 ? s + l.slice(dix,ixs[i]) + " ".repeat(max-ixs[i]) + l.slice(ixs[i]) + "\n" + " ".repeat(lst && i === lns.length - 1 ? lns[0].search(/\b[let|var]/)
-                                                                                                                                                                                              : dix)
-                                                                         : s + l.slice(dix) + "\n" + " ".repeat(dix)
-                                                , ""
-                                                );
+    const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
+                                                     : s.l += " ".repeat(s.d) + l + "\n"
+                                       , s
+                                       )
+                          , { l: ""
+                            , d: 0
+                            }
+                          )
+                   .l + (lst ? "" 
+                             : " ".repeat(dps.character));
     return editor.edit(eb => ( freeToFix = false
                              , eb.replace(sel,txt)
                              ));
@@ -187,11 +191,11 @@ function activate(context) {
     const sel = editor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
     const txt = editor.document.getText(sel)
-                               .replace(/\/\/.*$/gm,"");
+                               .replace(/(?<!:)\/\/.*$/gm,"");
     const tx_ = editor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(txt);
     let pos = sel.start;
-
+    
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
                                                       , d[1].push(c+" ","")
