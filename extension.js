@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const DISPOSABLES = [];
 
 Array.prototype.log = function(){
-                        this.forEach(e => console.log(e));
+                        this.forEach((e,i) => console.log(`Item ${i}: ${e}`));
                         return this;
                       }
 
@@ -200,11 +200,11 @@ function activate(context) {
     const sel = editor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
     const txt = editor.document.getText(sel)
-                               .replace(/\/\/.*$/gm,"");
+                               .replace(/(?<!:)\/\/.*$/gm,"");
     const tx_ = editor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(txt);
-    let pos = sel.start;
-
+    let pos = sel.start,
+        cmt;
     txt.split("")
        .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
                                                       , d[1].push(c+" ","")
@@ -232,6 +232,7 @@ function activate(context) {
               , [[],[]]
               )
        .reduce((p,c) => p.concat(c))
+       .log()
        .reduce( (p,s) => s !== "" ? p.then(_ => ( fixNext = new Promise(resolve => _resolve = resolve)
                                                 , editor.edit(eb => eb.insert(pos,s))
                                                 , fixNext
