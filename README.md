@@ -88,10 +88,13 @@ Nothing so far. Feel free to register encountered [issues](https://github.com/ke
 
 ## Things to Remember
 
-* Even if you have enabled the "comma-first" at the settings, leave a space after `{ `, `[ ` or `( ` to make the comma-first functionality effective. This way if it's activated in the settings, you still have the flexibility to enable / disable it for the individual object that you are typing in.
-* As of v0.2.5 the comma-first functionality comes with an additional **Declarations Alignment** functionality. Multiple declarations / assignments those come after `let` or `var` and separated by a comma, yields all assignment operators `=` in that declaration group to be aligned according to the longest variable name.
-* Regexes are important. When you are typing a regex you best start typing inbetween two forward slashes `/-> type here/` so that any delimiter being typed in the Regex wouldn't trigger a fake indent involuntarily.
-* Multiline comments, those start with `/*` and end with `*/` are not taken care of as of now.
+* If you have enabled the "comma-first" at the settings, leave a space after `{ `, `[ ` or `( ` to make the comma-first functionality effective. This way even if it's activated in the settings, you still have the flexibility to enable / disable it for the individual object that you are typing.
+* Starting from v0.2.5, the comma-first feature now includes an built in **Declarations Alignment** functionality. When declaring or assigning multiple variables after `let` or `var` keywords, separated by commas, Wider automatically aligns all `=` assignment operators within that group based on the length of the longest variable name.
+* Regexes are important. When you are typing a regex you best start typing inbetween two forward slashes.
+
+  `/-> type here/`
+     
+  This way the special characters being typed in the Regex such as `,`, `]` or `(` etc. are not considered as delimiters and do not trigger a fake indent involuntarily.
 
 ## Release Notes
 
