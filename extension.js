@@ -231,7 +231,8 @@ function activate(context) {
                                   : p
               , editor.edit(eb => eb.replace(sel.union(sl_), ""))
               )
-       .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)));
+       .then(_ => editor.edit(eb => eb.insert(pos,tx_)))
+       .then(_ => moveCursorTo(sel.end.line,sel.end.character));
   }
 
   function fixOnType(event) {

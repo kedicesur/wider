@@ -204,4 +204,11 @@ Date: Mon Feb 26 2024 16:34:12 GMT+0300 (GMT+03:00)
          typo in README:md
     mod: package.json with new version
     ver: 0.2.9
-     
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Feb 26 2024 22:28:29 GMT+0300 (GMT+03:00)
+ 
+
+    fix: .commaFirstSelection() function is more
+         stable.
+    ver: 0.2.10
