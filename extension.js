@@ -47,9 +47,9 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm // Suppresses the regexp, string literal
-                      , match => "_".repeat(match.length)                                                      // and comment parts of the given string
-                      );                                                                                       // with "_" character in the same length
+    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm // Suppresses the regexp, string literal \/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})
+                      , match => "_".repeat(match.length)                                                    // and comment parts of the given string
+                      );                                                                                     // with "_" character in the same length
   }
 
   function offsetOfRightPair(txt, pos){
@@ -173,7 +173,7 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})|(['"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/g)];
+    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm)];
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
@@ -191,7 +191,7 @@ function activate(context) {
     const sel = editor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
     const txt = editor.document.getText(sel)
-                               .replace(/(?<!:)\/\/.*$/gm,"");
+                               .replace(/(?<![:\/])\/\/.*$/gm,"");
     const tx_ = editor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(txt);
     let pos = sel.start;
