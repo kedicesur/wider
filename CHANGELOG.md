@@ -192,4 +192,16 @@ Date: Sun Feb 25 2024 18:55:41 GMT+0300 (GMT+03:00)
          a better fix will be implemented.
     rem: unused variables and logs.
     ver: 0.2.8
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Feb 26 2024 16:34:12 GMT+0300 (GMT+03:00)
+ 
+
+    fix: restored .suppressIrrelevantCharacters() and
+         .isDontCare() functions to previous state.
+         removing comments in .commaFirstSelection()
+         function considers file:///some.txt type url.
+         typo in README:md
+    mod: package.json with new version
+    ver: 0.2.9
      

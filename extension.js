@@ -47,9 +47,9 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm // Suppresses the regexp, string literal \/(?:\\.|[^\\\/])+(?:\/[gimuy]{0,5})
-                      , match => "_".repeat(match.length)                                                    // and comment parts of the given string
-                      );                                                                                     // with "_" character in the same length
+    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm
+                      , match => "_".repeat(match.length)
+                      );
   }
 
   function offsetOfRightPair(txt, pos){
