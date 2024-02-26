@@ -1,7 +1,8 @@
 const vscode = require('vscode');
 const DISPOSABLES = [];
 
-Array.prototype.log = function(){
+Array.prototype.log = function(...ps){
+                        ps.length && console.log(`Parameters Log: ${ps.reduce((p,c) => p.toString() + " - " + c.toString())}`);
                         this.forEach((e,i) => console.log(`Item ${i}: ${e}`));
                         return this;
                       }
@@ -240,7 +241,8 @@ function activate(context) {
                                   : p
               , editor.edit(eb => eb.replace(sel.union(sl_), ""))
               )
-       .then(_ => editor.edit(eb => eb.insert(editor.selection.active,tx_)));
+       .then(_ => editor.edit(eb => eb.insert(pos,tx_)))
+       .then(_ => moveCursorTo(sel.end.line,sel.end.character));
   }
 
   function fixOnType(event) {
