@@ -218,7 +218,8 @@ function activate(context) {
                                                       , d[1].length = 0
                                                       )
                                                     :
-                             sup[i] === ","         ? ( d[1].length && ( d[1][d[1].length-1] = d[1][d[1].length-1].trim()
+                             sup[i] === ","         ||
+                             sup[i] === ";"         ? ( d[1].length && ( d[1][d[1].length-1] = d[1][d[1].length-1].trim()
                                                                        , d[0].push(d[1].join(""))
                                                                        )
                                                       , d[0].push(c)
