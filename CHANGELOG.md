@@ -212,3 +212,15 @@ Date: Mon Feb 26 2024 22:28:29 GMT+0300 (GMT+03:00)
     fix: .commaFirstSelection() function is more
          stable.
     ver: 0.2.10
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Thu Feb 29 2024 18:02:34 GMT+0300 (GMT+03:00)
+ 
+
+    fix: alignDeclaration() takes cursor to correct
+         position when declarations end with ";".
+         restored commaFirstSelection() final line to
+         it's previous state.
+    mod: alignDeclaration() function moved in code to
+         formatting functions section
+    ver: 0.2.11
