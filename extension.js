@@ -99,27 +99,6 @@ function activate(context) {
                                                          : new vscode.Position(pln,pch)
                 : pos;
   }
-
-  function alignDeclaration(dps, pos, lst){
-    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
-    const lns = editor.document.getText(sel)
-                               .split(/\n+/);
-    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
-    const max = Math.max(...ixs);
-    const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
-                                                     : s.l += " ".repeat(s.d) + l + "\n"
-                                       , s
-                                       )
-                          , { l: ""
-                            , d: 0
-                            }
-                          )
-                   .l + (lst ? "" 
-                             : " ".repeat(dps.character));
-    return editor.edit(eb => ( freeToFix = false
-                             , eb.replace(sel,txt)
-                             ));
-  }
  
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
@@ -197,6 +176,32 @@ function activate(context) {
 
   // Formatting functions
 
+  function alignDeclaration(dps, pos, lst){
+    let lvi;  // indeex of let or var
+    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
+    const lns = editor.document.getText(sel)
+                               .split(/\n+/);
+    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
+    const max = Math.max(...ixs);
+    const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
+                                                     : s.l += " ".repeat(s.d) + l + "\n"
+                                       , s
+                                       )
+                          , { l: ""
+                            , d: 0
+                            }
+                          )
+                   .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
+                                                      .text.search(/\b(?:let|var)\b/)
+                               , lvi > 0 ? " ".repeat(lvi)
+                                         : ""
+                               )
+                             : " ".repeat(dps.character));
+    return editor.edit(eb => ( freeToFix = false
+                             , eb.replace(sel,txt)
+                             ));
+  }
+
   function commaFirstSelection(editor){
     const sel = editor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
@@ -242,8 +247,8 @@ function activate(context) {
                                   : p
               , editor.edit(eb => eb.replace(sel.union(sl_), ""))
               )
-       .then(_ => editor.edit(eb => eb.insert(pos,tx_)))
-       .then(_ => moveCursorTo(sel.end.line,sel.end.character));
+       .then(_ => editor.edit(eb => eb.insert(pos,tx_)));
+       //.then(_ => moveCursorTo(sel.end.line,sel.end.character));
   }
 
   function fixOnType(event) {
