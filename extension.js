@@ -141,7 +141,11 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false] 
+    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)
+                                , txt.substring(dix,pch)
+                                     .search(/\(/) >= 0 ? [pch, false, false]
+                                                        : [dix, false, false]
+                                )
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
@@ -270,7 +274,7 @@ function activate(context) {
                                               :
                               chgtxt === "?"  ? tefActive                &&
                                                 txt[pix-1] === " "       &&
-                                                pos === bypassObject(pos) ? ( nix = txt.lastIndexOf(":", pix)
+                                                pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
                                                                             , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                                            , eb.insert( pos.translate(0, 1)
                                                                                                                       , " "
