@@ -134,16 +134,18 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
-             , dix >= 0 && (cnt = 0)
-             );
+      cnt            &&
+      mod === void 0 && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
+                        , dix >= 0 && (cnt = 0)
+                        );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
     }
     return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)
                                 , txt.substring(dix,pch)
-                                     .search(/\(/) >= 0 ? [pch, false, false]
+                                     .search(/\(/) >= 0 ||
+                                  dix === -1            ? [pch, false, false]
                                                         : [dix, false, false]
                                 )
                               :
@@ -323,7 +325,7 @@ function activate(context) {
                                                                      )
                                                                    : Promise.resolve()
                                               :
-                              chgtxt === "{}" ? ( nix = difActive ? txt.search(/function.*\(/)
+                              chgtxt === "{}" ? ( nix = difActive ? txt.search(/function\s+[\w\$]|\$?[\w\-]+\s*\((?!.*\$?[\w\-]+\s*\()/)
                                                                   : -1
                                                 , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert( pos.translate(0,1)

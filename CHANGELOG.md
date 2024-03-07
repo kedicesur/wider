@@ -236,3 +236,18 @@ Date: Sat Mar 02 2024 19:43:02 GMT+0300 (GMT+03:00)
          Ternary "?" doesn't confuse if previous text
          on line has regex or string with ":" in it.
     ver: 0.2.12
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Mar 04 2024 01:42:38 GMT+0300 (GMT+03:00)
+ 
+
+    fix: when object returning expression sequences
+         (comma first type paranthesised code blocks)
+         are chained the dot "." gets the opening left
+         paranthesis index.
+         object methods defined with curly braces are
+         now fine.
+         "." is ok when there is variable declarations
+         in paranthesis such as .then(function(){let})
+    mod: typo fix in README.md
+    ver: 0.2.13

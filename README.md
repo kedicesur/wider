@@ -25,7 +25,7 @@ The features introduced in this package can individually be enabled / disabled t
 
 - ### Nested Ternary
 
-**Nested Ternary** is about narowing multiple but dependent conditions into a single resolution. Such as in pseudo code  `if x === 1 and y === 0 then doSomeThingA()` but `if x === 1 and y !== 0 then doSomeThingB()` however `if !== 1 then doSomethingC()` and assign the result to `a`. Entering colon (`:`) moves it to the last unmatched question mark's (`?`) indent on the next line.
+**Nested Ternary** is about narrowing multiple but dependent conditions into a single resolution. Such as in pseudo code  `if x === 1 and y === 0 then doSomeThingA()` but `if x === 1 and y !== 0 then doSomeThingB()` however `if !== 1 then doSomethingC()` and assign the result to `a`. Entering colon (`:`) moves it to the last unmatched question mark's (`?`) indent on the next line.
 
 ![nested_ternary](images/nested_ternary.gif)
 
