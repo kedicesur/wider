@@ -135,18 +135,18 @@ function activate(context) {
                                  : void 0;
       }
       cnt            &&
-      mod === void 0 && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)  // get the index of variable name after last "let" or "var" on line
+      mod === void 0 && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
                         , dix >= 0 && (cnt = 0)
                         );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)                    // get the index of dot "." of the last method before matching left paranthesis
-                                , txt.substring(dix,pch)                             // normally this is the method name but if the matching left paren belongs to
-                                     .search(/\(/) >= 0 ||                           // an expression sequenced code block in a callback that returns a promise etc
-                                  dix === -1            ? [pch, false, false]        // and we like to chain to it with a ".then" this test prevents it to catch the
-                                                        : [dix, false, false]        // dot at dix index and uses the matching left paranthesis index instead.
+    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)
+                                , txt.substring(dix,pch)
+                                     .search(/\(/) >= 0 ||
+                                  dix === -1            ? [pch, false, false]
+                                                        : [dix, false, false]
                                 )
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
