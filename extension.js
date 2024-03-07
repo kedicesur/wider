@@ -333,7 +333,7 @@ function activate(context) {
                                                                      )
                                                                    : Promise.resolve()
                                               :
-                              chgtxt === "{}" ? ( nix = difActive ? txt.search(/function.*\(/)
+                              chgtxt === "{}" ? ( nix = difActive ? txt.search(/function\s+[\w\$]|\$?[\w\-]+\s*\((?!.*\$?[\w\-]+\s*\()/)
                                                                   : -1
                                                 , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert( pos.translate(0,1)
