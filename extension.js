@@ -150,8 +150,7 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)
-                                , console.log(txt,dix)                    // get the index of dot "." of the last method before matching left paranthesis
+    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)                    // get the index of dot "." of the last method before matching left paranthesis
                                 , txt.substring(dix,pch)                             // normally this is the method name but if the matching left paren belongs to
                                      .search(/\(/) >= 0 ||                           // an expression sequenced code block in a callback that returns a promise etc
                                   dix === -1            ? [pch, false, false]        // and we like to chain to it with a ".then" this test prevents it to catch the
