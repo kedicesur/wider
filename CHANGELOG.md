@@ -262,3 +262,14 @@ Date: Fri Mar 08 2024 16:00:37 GMT+0300 (GMT+03:00)
          018da2a12508a373523023257a9f83214d1ea4b2 in
          v0.2.12 reverted back. Bad Idea.
     ver: 0.2.14
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Fri Mar 08 2024 23:00:03 GMT+0300 (GMT+03:00)
+ 
+    fix: "{}" indented correctly with shorthand object
+         method definitions.
+    add: const keyword also gets special powers like
+         let and var.
+    rem: forgotten console.log()s
+    ver: 0.2.15
