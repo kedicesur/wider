@@ -135,7 +135,6 @@ function activate(context) {
                                  : void 0;
       }
       cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
-                                                , console.log(dix)
                                                 , dix >= 0 && (cnt = 0)
                                                 );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
