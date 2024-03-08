@@ -142,7 +142,7 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\s+|.*\bvar\s+)/)
+      cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
                                                 , console.log(dix)
                                                 , dix >= 0 && (cnt = 0)
                                                 );
@@ -182,7 +182,7 @@ function activate(context) {
     const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
     const lns = editor.document.getText(sel)
                                .split(/\n+/);
-    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
+    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|const\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
     const max = Math.max(...ixs);
     const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
                                                      : s.l += " ".repeat(s.d) + l + "\n"
@@ -193,7 +193,7 @@ function activate(context) {
                             }
                           )
                    .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
-                                                      .text.search(/\b(?:let|var)\b/)
+                                                      .text.search(/\b(?:let|var|const)\b/)
                                , lvi > 0 ? " ".repeat(lvi)
                                          : ""
                                )
