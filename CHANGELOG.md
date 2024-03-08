@@ -251,3 +251,14 @@ Date: Mon Mar 04 2024 01:42:38 GMT+0300 (GMT+03:00)
          in paranthesis such as .then(function(){let})
     mod: typo fix in README.md
     ver: 0.2.13
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Fri Mar 08 2024 16:00:37 GMT+0300 (GMT+03:00)
+ 
+
+    fix: ";" works fine in variable declarations
+         "{}" wont trigger if used as object parameter
+         stacked chaining change introduced by commmit
+         018da2a12508a373523023257a9f83214d1ea4b2 in
+         v0.2.12 reverted back. Bad Idea.
+    ver: 0.2.14
