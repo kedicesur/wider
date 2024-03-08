@@ -142,12 +142,7 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? ( dix = txt.lastIndexOf(".", pch)
-                                , txt.substring(dix,pch)
-                                     .search(/\(/) >= 0 ||
-                                  dix === -1            ? [pch, false, false]
-                                                        : [dix, false, false]
-                                )
+    return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false]
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
