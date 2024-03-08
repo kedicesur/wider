@@ -134,10 +134,10 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt            &&
-      mod === void 0 && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\b|.*\bvar\b)/)
-                        , dix >= 0 && (cnt = 0)
-                        );
+      cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(let|var)\s+)[\w\$](?!.*\blet\s+|.*\bvar\s+)/)
+                                                , console.log(dix)
+                                                , dix >= 0 && (cnt = 0)
+                                                );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
