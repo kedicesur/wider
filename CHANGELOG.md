@@ -282,3 +282,18 @@ Date: Sun Mar 10 2024 15:25:05 GMT+0300 (GMT+03:00)
          computed keys of shorthand method definitions
     mod: README.md
     ver: 0.2.16
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Mar 10 2024 22:25:11 GMT+0300 (GMT+03:00)
+ 
+
+    fix: object parameters are difficult when it comes
+         to disabling them to trigger "{}" action. As
+         of this version they are fixed to a level in
+         order to have correct indenting first enter
+         the "{}" those defining the function's scope
+         and then enter the object parameters so that
+         everything gets indented properly. This will
+         remain as is until it receives a proper fix.
+    mod: README.md to reflect object parameters fix.
+    ver: 0.2.17
