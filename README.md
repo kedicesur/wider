@@ -97,6 +97,7 @@ Nothing so far. Feel free to register encountered [issues](https://github.com/ke
   `/-> type here/`
      
   This way the special characters being typed in the Regex such as `,`, `]` or `(` etc. are not considered as delimiters and do not trigger a fake indent involuntarily.
+* When you have object parameters such as `function xyz({})`, do not type the object parameters initially. Instead, construct the function with empty parameters and its scope like `function xyz(){}`, and then go back and add the object parameters.
 
 ## Release Notes
 
