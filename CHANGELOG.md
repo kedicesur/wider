@@ -273,3 +273,12 @@ Date: Fri Mar 08 2024 23:00:03 GMT+0300 (GMT+03:00)
          let and var.
     rem: forgotten console.log()s
     ver: 0.2.15
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Mar 10 2024 15:25:05 GMT+0300 (GMT+03:00)
+ 
+
+    add: "{}" benefits from arrow functions along with
+         computed keys of shorthand method definitions
+    mod: README.md
+    ver: 0.2.16

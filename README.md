@@ -13,6 +13,8 @@ It is acknowledged that some coders may initially find the wider code formatting
 
 The initial release of Wider aims to fulfill the basic requirements set forth by the project's creator. However, in addition to maintenance, future releases will be implemented as the need for new functionalities arises.  Please feel free to request additional features that you think would complement the package effectively.
 
+To get a general idea about the formatting of the Wider extension in JS and JSON, you can take a look at the extension's own [extension.js](https://github.com/kedicesur/wider/blob/master/extension.js) or [package.json](https://github.com/kedicesur/wider/blob/master/package.json) files.
+
 ## Features
 
 The features introduced in this package can individually be enabled / disabled through Wider's settings menu. The current functionalities of Wider are as follows;
