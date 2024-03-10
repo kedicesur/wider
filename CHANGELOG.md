@@ -297,3 +297,12 @@ Date: Sun Mar 10 2024 22:25:11 GMT+0300 (GMT+03:00)
          remain as is until it receives a proper fix.
     mod: README.md to reflect object parameters fix.
     ver: 0.2.17
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Mar 11 2024 00:19:33 GMT+0300 (GMT+03:00)
+ 
+
+    fix: bypassObject() function takes "try {" case
+         into account yielding ternaries to work in
+         try blocks.
+    ver: 0.2.18
