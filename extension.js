@@ -107,12 +107,17 @@ function activate(context) {
     let pln = pos.line,
         pch = pos.character,
         cnt = 1,
+        blk = 0,
         tps,
         dix;
-        
+
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
       while(cnt && pch-- > 0){
+        blk += txt[pch] === "}" ? 1
+                                :
+               txt[pch] === "{" ? -1
+                                : 0;
         DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
                                                  , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
@@ -134,9 +139,11 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
-                                                , dix >= 0 && (cnt = 0)
-                                                );
+      !blk                            && 
+      cnt                             && 
+      (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
+                                         , dix >= 0 && (cnt = 0)
+                                         );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
@@ -320,7 +327,8 @@ function activate(context) {
                                                                    : Promise.resolve()
                                               :
                               chgtxt === "{}" ? ( nix = difActive ? txt.slice(0,pos.character)
-                                                                       .search(/function\s+[\w\$][\w\-\,\(\s]+(?=\))|(?:[\$\[]{0,1}(?!.*{)[\w\-\]]+\s*\(.*\)(?!.*[\$\[]{0,1}(?!.*{)[\w\-\]]+\s*\(.*\)))(?!\s*=>)|\(?(?:[\$\w-][\$\w\-,\s]*)*\)?\s*(?==>)/)
+                                                                       .search(/function(?:\s+\${0,1}[\w\-]+\s*)*\(.*?\)|(?!.*=>|.*function)(?:[\$\[]{0,1}[\w\-\]]+\s*\(.*\))|\(?\S*\)?\s*(?==>)/)
+                                                                       //.search(/function\s+[\w\$]|\${0,1}(?!.*{)[\w\-]+\s*\(.*\)(?!.*\${0,1}(?!.*{)[\w\-]+\s*\(.*\))/) not including arrows and computed key shortand methods
                                                                   : -1
                                                 , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert( pos.translate(0,1)
