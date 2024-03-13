@@ -107,12 +107,17 @@ function activate(context) {
     let pln = pos.line,
         pch = pos.character,
         cnt = 1,
+        blk = 0,
         tps,
         dix;
-        
+
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
       while(cnt && pch-- > 0){
+        blk += txt[pch] === "}" ? 1
+                                :
+               txt[pch] === "{" ? -1
+                                : 0;
         DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
                                                  , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
@@ -134,9 +139,11 @@ function activate(context) {
                                                : cnt++
                                  : void 0;
       }
-      cnt && (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
-                                                , dix >= 0 && (cnt = 0)
-                                                );
+      !blk                            && 
+      cnt                             && 
+      (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
+                                         , dix >= 0 && (cnt = 0)
+                                         );
       cnt && pln-- && ( txt = editor.document.lineAt(pln).text
                       , pch = txt.length
                       );
