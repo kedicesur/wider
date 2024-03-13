@@ -306,3 +306,15 @@ Date: Mon Mar 11 2024 00:19:33 GMT+0300 (GMT+03:00)
          into account yielding ternaries to work in
          try blocks.
     ver: 0.2.18
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Wed Mar 13 2024 19:40:00 GMT+0300 (GMT+03:00)
+ 
+
+    fix: "{}" may this time work better in all kind of
+         function / method definitions, destructuring
+         arguments included.
+         const|let|var was breaking comma-first when
+         they were defined in a function which resides
+         in comma-first applicable block or object.
+    ver: 0.2.19
