@@ -100,7 +100,7 @@ Nothing so far. Feel free to register encountered [issues](https://github.com/ke
 
 ## Release Notes
 
-See the [CHANGELOG](CHANGELOG.md) file for details.
+See the [CHANGELOG](https://marketplace.visualstudio.com/items/Redu.wider/changelog) file for details.
 
 ## License
 
