@@ -318,3 +318,10 @@ Date: Wed Mar 13 2024 19:40:00 GMT+0300 (GMT+03:00)
          they were defined in a function which resides
          in comma-first applicable block or object.
     ver: 0.2.19
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Thu Mar 14 2024 21:38:53 GMT+0300 (GMT+03:00)
+ 
+
+    fix: ternary works in =>{} type arrow functions
+    ver: 0.2.20
