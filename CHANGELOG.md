@@ -325,3 +325,18 @@ Date: Thu Mar 14 2024 21:38:53 GMT+0300 (GMT+03:00)
 
     fix: ternary works in =>{} type arrow functions
     ver: 0.2.20
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
+
+
+    fix: in arrows "{}" only works when "{}" follows
+         "=>\s*".
+         arrow object methods defined under property
+         names and using "{}" is ok.
+         shortand methods using "{}" don't trigger for
+         "fName" in "fName({ method(){} })" but aligns
+         to "method". This may break if method has a
+         function parameter like "method(yyz(),x)" in
+         which case "yyz" would trigger the indent.
+    ver: 0.2.21
