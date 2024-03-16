@@ -340,3 +340,12 @@ Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
          function parameter like "method(yyz(),x)" in
          which case "yyz" would trigger the indent.
     ver: 0.2.21
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Mar 17 2024 02:41:13 GMT+0300 (GMT+03:00)
+ 
+
+    fix: v2.21 fix for "fName({ method() })" was
+         breaking "method({})".
+    ver: 0.2.22
