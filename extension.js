@@ -327,10 +327,9 @@ function activate(context) {
                                                                    : Promise.resolve()
                                               :
                               chgtxt === "{}" ? ( nix = difActive ? txt.slice(0,pos.character)
-                                                                       .search(/function(?:\s+\${0,1}[\w\-]+\s*)*\(.*?\)|(?!.*=>|.*function)(?:[\$\[]{0,1}[\w\-\]]+\s*\(.*\))|\(?\S*\)?\s*(?==>\s*$)/)
+                                                                       .search(/function(?:\s+\${0,1}[\w\-]+\s*)*\(.*?\)|(?<!(?:function|=>).*)(?:[\$\[]{0,1}[\w\-\]]+\s*\(.*\))(?!.*(?:function|=>))|\(?\S*\)?(?=\s*=>\s*$)/)
                                                                        //.search(/function\s+[\w\$]|\${0,1}(?!.*{)[\w\-]+\s*\(.*\)(?!.*\${0,1}(?!.*{)[\w\-]+\s*\(.*\))/) not including arrows and computed key shortand methods
                                                                   : -1
-                                                , console.log(txt.slice(0,pos.character))
                                                 , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                , eb.insert( pos.translate(0,1)
                                                                                           , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
