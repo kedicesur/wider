@@ -138,9 +138,9 @@ function activate(context) {
                                                  )
                                                : cnt++
                                  : void 0;
-      }
+      }console.log(cnt,pln,pch)
       !blk                            && 
-      cnt                             && 
+      //cnt                             && 
       (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
                                          , dix >= 0 && (cnt = 0)
                                          );
@@ -175,7 +175,7 @@ function activate(context) {
 
   // Formatting functions
 
-  function alignDeclaration(dps, pos, lst){
+  function alignDeclaration(dps, pos, lst){ // THIS NEEDS TO BE FIXED AS DECLARATIONS IN FUNCTION DECLARATIONS EFFECT THE INDENTING
     let lvi;
     const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
     const lns = editor.document.getText(sel)
