@@ -342,10 +342,20 @@ Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
     ver: 0.2.21
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
-Committer: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 17 2024 02:41:13 GMT+0300 (GMT+03:00)
  
 
     fix: v2.21 fix for "fName({ method() })" was
          breaking "method({})".
     ver: 0.2.22
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
+ 
+
+    fix: object parameters coming after parameterized
+         functions such as "someFunc(yyz(),{})" don't
+         trigger method indenting.
+    add: "try {}" indenting.
+    add: "class yyz {}" indenting.
+    ver: 0.2.23
