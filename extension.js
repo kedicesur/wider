@@ -6,10 +6,10 @@ function activate(context) {
   let editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
       freeToFix = true,
-      cflActive = language === "javascript" || language === "typescript",
-      difActive = cflActive,
-      smcActive = cflActive,
-      tefActive = cflActive,
+      cflActive = language === "javascript" || language === "typescript", // comma first layout
+      difActive = cflActive,                                              // deep indented functions
+      smcActive = cflActive,                                              // stacked method chaining  
+      tefActive = cflActive,                                              // ternary formatting
       _resolve,
       fixNext   = new Promise(resolve => _resolve = resolve);
   
@@ -47,7 +47,7 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm
+    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
                       , match => "_".repeat(match.length)
                       );
   }
@@ -159,7 +159,7 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm)];
+    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm)];
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
