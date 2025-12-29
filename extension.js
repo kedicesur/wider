@@ -19,7 +19,7 @@ class VirtualEditor {
                                , ...this.lines.slice(s.line + 1, e.line)
                                , (this.lines[e.line] || "").substring(0, e.character)
                                ].join("\n");
-                    }
+                      }
            , get lineCount() { return this.lines.length; }
            , languageId: this.languageId
            };
