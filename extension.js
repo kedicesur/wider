@@ -9,7 +9,10 @@ class VirtualEditor {
     this.languageId = languageId;
   }
   get document() {
-    return { lineAt: n => ({ text: this.lines[n] || "" })
+    return { lineAt: n => ({ text: this.lines[n] || ""
+                           , lineNumber: n
+                           , isEmptyOrWhitespace: !/\S/.test(this.lines[n] || "")
+                           })
            , getText: r => {
                         if (!r) return this.lines.join("\n");
                         const s = r.start,
@@ -212,7 +215,7 @@ function activate(context) {
                                  : void 0;
       }
       !blk                            && 
-      //cnt                             && 
+      //cnt                             && NOTE: do NOT guard with `cnt &&` here — declarations override balance
       (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
                                          , dix >= 0 && (cnt = 0)
                                          );
@@ -309,8 +312,6 @@ function activate(context) {
 
     // 3. Run Process in Isolation
     const vEditor = new VirtualEditor(realEditor.document.languageId);
-    //const globalEditorRef = editor; // Backup global var
-    //editor = vEditor; // Swap global var so existing functions use vEditor
 
     return tokens.reduce( (p, t) => p.then(_ => {
                                              const pos = vEditor.selection.active;
@@ -318,9 +319,9 @@ function activate(context) {
                                                            .then(_ => {
                                                                    const trimmed = t.trim(),
                                                                          char    = trimmed.slice(-1);
-                                                                   return !trimmed ? void 0
+                                                                   return !trimmed ? Promise.resolve()
                                                                                    :
-                                                       !",;{}[]():".includes(char) ? void 0
+                                                       !",;{}[]():".includes(char) ? Promise.resolve()
                                                                                    : fixOnType( { document: vEditor.document
                                                                                                 , contentChanges: [{ text: char
                                                                                                                    , range: new vscode.Range( vEditor.selection.active.translate(0, -1)
