@@ -28,10 +28,6 @@
                       , "onLanguage:typescript"
                       , "onLanguage:json"
                       ]
-, "files": [ "*.js"
-           , "*.ts"
-           , "*.json" 
-           ]
 , "contributes": { "configuration": { "title": "Wider"
                                     , "properties": { "wider.ternaryFormatting": { "type": "boolean"
                                                                                  , "default": true

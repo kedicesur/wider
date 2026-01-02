@@ -215,7 +215,7 @@ function activate(context) {
                                  : void 0;
       }
       !blk                            && 
-      //cnt                             && NOTE: do NOT guard with `cnt &&` here — declarations override balance
+      cnt                             && 
       (mod === void 0 || mod === ";") && ( dix = txt.search(/(?<=\b(?:let|var|const)\s+)[\w\$](?!.*(?<=\b(?:let|var|const)\s+)[\w\$])/)
                                          , dix >= 0 && (cnt = 0)
                                          );
@@ -283,7 +283,6 @@ function activate(context) {
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
     const tailTxt = realEditor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(rawTxt);
-    const isJSON = realEditor.document.languageId === "json";
 
     // 2. Tokenize (Mofied and Simplified)
     const acc = rawTxt.split("")
@@ -296,8 +295,7 @@ function activate(context) {
                                                               , d
                                                               )
                                                             :
-                                  "}]),;".includes(sup[i]) ||
-                          (isJSON && ":,".includes(sup[i])) ? ( d[1] && d[0].push(d[1].trim())
+                                   "}]),;".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
                                                               , d[0].push(c)
                                                               , d[1] = ""
                                                               , d
