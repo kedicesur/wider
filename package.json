@@ -12,7 +12,7 @@
 , "repository": { "type": "git"
                 , "url": "https://github.com/kedicesur/wider.git"
                 }
-, "engines": { "vscode": "^1.85.0" }
+, "engines": { "vscode": "^1.75.0" }
 , "categories": [ "Formatters" ]
 , "keywords": [ "comma first"
               , "formatter"
@@ -65,7 +65,7 @@
 , "scripts": { "pretest": "npm run lint"
              , "test": "vscode-test"
              }
-, "devDependencies": { "@types/vscode": "^1.85.0"
+, "devDependencies": { "@types/vscode": "^1.75.0"
                      , "@types/mocha": "^10.0.6"
                      , "@types/node": "18.x"
                      , "typescript": "^5.3.3"
