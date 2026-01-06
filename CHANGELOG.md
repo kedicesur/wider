@@ -359,3 +359,15 @@ Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
     add: "try {}" indenting.
     add: "class yyz {}" indenting.
     ver: 0.2.23
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Fri Jan 02 2026 22:55:11 GMT+0300 (GMT+03:00)
+ 
+
+    fix: rewrite comma first selection so that the
+         whole change can be undone at one go.
+         several tiny issues
+    add: virtual editor so that we can now develop
+         selection based formatting similar to comma
+         first
+    ver: 0.3.0
