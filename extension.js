@@ -1,6 +1,81 @@
 const vscode = require('vscode');
 const DISPOSABLES = [];
 
+class VirtualEditor {
+  constructor(languageId = "javascript") {
+    this.lines = [""];
+    this.selection = new vscode.Selection(0, 0, 0, 0);
+    this.languageId = languageId;
+  }
+  get document() {
+    return { lineAt: n => ({ text: this.lines[n] || ""
+                           , lineNumber: n
+                           , isEmptyOrWhitespace: !/\S/.test(this.lines[n] || "")
+                           })
+           , getText: r => {
+                        if (!r) return this.lines.join("\n");
+                        const s = r.start,
+                              e = r.end;
+                        if (s.line === e.line) return (this.lines[s.line] || "").substring(s.character, e.character);
+                        return [ (this.lines[s.line] || "").substring(s.character)
+                               , ...this.lines.slice(s.line + 1, e.line)
+                               , (this.lines[e.line] || "").substring(0, e.character)
+                               ].join("\n");
+                      }
+           , get lineCount() { return this.lines.length; }
+           , languageId: this.languageId
+           };
+  }
+  
+  edit(callback) {
+    const edits = [];
+    callback({ insert: (pos, val) => edits.push({ type: 'i', pos, val })
+             , replace: (range, val) => edits.push({ type: 'r', range, val })
+             , delete: (range) => edits.push({ type: 'd', range })
+             });
+    
+    edits.sort((a, b) => {
+                 const pA = a.pos || a.range.start,
+                       pB = b.pos || b.range.start;
+                 return pB.compareTo(pA);
+              });
+
+    for (const e of edits) {
+      (e.type === 'i') ? this._insert(e.pos, e.val)
+                       :
+      (e.type === 'r') ? this._replace(e.range, e.val)
+                       :
+      (e.type === 'd') ? this._replace(e.range, "")
+                       : void 0;
+    }
+    return Promise.resolve(true);
+  }
+
+  _insert(pos, txt) {
+    const l     = this.lines[pos.line] || "",
+          pre   = l.substring(0, pos.character),
+          post  = l.substring(pos.character),
+          parts = txt.split("\n");
+    parts.length === 1 ? ( this.lines[pos.line] = pre + txt + post
+                         , this.selection = new vscode.Selection(pos.line, pos.character + txt.length, pos.line, pos.character + txt.length)
+                         )
+                       : ( this.lines[pos.line] = pre + parts[0]
+                         , this.lines.splice(pos.line + 1, 0, ...parts.slice(1, -1), parts[parts.length - 1] + post)
+                         , this.selection = new vscode.Selection(pos.line + parts.length - 1, parts[parts.length - 1].length, pos.line + parts.length - 1, parts[parts.length - 1].length)
+                         );
+  }
+
+  _replace(range, txt) {
+    // Delete then Insert
+    const s  = range.start, e = range.end,
+          l1 = this.lines[s.line],
+          l2 = this.lines[e.line];
+    this.lines[s.line] = l1.substring(0, s.character) + l2.substring(e.character);
+    (e.line > s.line) && this.lines.splice(s.line + 1, e.line - s.line);
+    txt && this._insert(s, txt);
+  }
+}
+
 function activate(context) {
   const config  = vscode.workspace.getConfiguration("editor");
   let editor    = vscode.window.activeTextEditor,
@@ -9,14 +84,12 @@ function activate(context) {
       cflActive = language === "javascript" || language === "typescript",
       difActive = cflActive,
       smcActive = cflActive,
-      tefActive = cflActive,
-      _resolve,
-      fixNext   = new Promise(resolve => _resolve = resolve);
+      tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  e.reason === void 0     &&              // not UNDO (1) or REDO (2)
-                                                                  freeToFix               && fixOnType(e) // see https://github.com/microsoft/vscode/issues/204018
+                                                                  e.reason === void 0     &&
+                                                                  freeToFix               && fixOnType(e, editor)
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -47,7 +120,7 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm
+    return str.replace( /\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
                       , match => "_".repeat(match.length)
                       );
   }
@@ -159,7 +232,7 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['\"`])((?:\\.|[^\\\1])*?)\1|(?<![:\/])\/\/.*$/gm)];
+    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm)];
     return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
   }
 
@@ -201,55 +274,76 @@ function activate(context) {
                              ));
   }
 
-  function commaFirstSelection(editor){
-    const sel = editor.selection;
+  function commaFirstSelection(realEditor) {
+
+    const sel = realEditor.selection;
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
-    const txt = editor.document.getText(sel)
-                               .replace(/(?<![:\/])\/\/.*$/gm,"");
-    const tx_ = editor.document.getText(sl_);
-    const sup = suppressIrrelevantCharacters(txt);
-    let pos = sel.start;
+    const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
+    const tailTxt = realEditor.document.getText(sl_);
+    const sup = suppressIrrelevantCharacters(rawTxt);
     
-    txt.split("")
-       .reduce( (d,c,i) => ( "{[(".includes(sup[i]) ? ( d[1].length && (d[1][d[1].length-1] = d[1][d[1].length-1].trimStart())
-                                                      , d[1].push(c+" ","")
-                                                      )
-                                                    :
-                             "}])".includes(sup[i]) ? ( d[1].length && ( d[1][d[1].length-1] = d[1][d[1].length-1].trim()
-                                                                       , d[0].push(d[1].join(""))
-                                                                       )
-                                                      , d[0].push(c)
-                                                      , d[1].length = 0
-                                                      )
-                                                    :
-                             sup[i] === ","         ||
-                             sup[i] === ";"         ? ( d[1].length && ( d[1][d[1].length-1] = d[1][d[1].length-1].trim()
-                                                                       , d[0].push(d[1].join(""))
-                                                                       )
-                                                      , d[0].push(c)
-                                                      , d[1].length = 0
-                                                      )
-                                                    :
-                             sup[i] !== "\n"        ? d[1].length ? (d[1][d[1].length-1] += c)
-                                                                  : d[1].push(c)
-                                                    : void 0
-                           , d
-                           )
-              , [[],[]]
-              )
-       .reduce((p,c) => p.concat(c))
-       .reduce( (p,s) => s !== "" ? p.then(_ => ( fixNext = new Promise(resolve => _resolve = resolve)
-                                                , editor.edit(eb => eb.insert(pos,s))
-                                                , fixNext
-                                                ))
-                                     .then(_ => pos = editor.selection.active.translate(0, s.length+1))
-                                  : p
-              , editor.edit(eb => eb.replace(sel.union(sl_), ""))
-              )
-       .then(_ => editor.edit(eb => eb.insert(pos,tx_)));
+    const acc = rawTxt.split("")
+                      .reduce( (d, c, i) => sup[i] === "\n" ? d
+                                                            : 
+                                     "{[(".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
+                                                              , d[0][d[0].length - 1]?.match(/[=:,)]$/) && (d[0][d[0].length - 1] += " ")
+                                                              , d[0].push(c + " ")
+                                                              , d[1] = ""
+                                                              , d
+                                                              )
+                                                            :
+                                   "}]),;".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
+                                                              , d[0].push(c)
+                                                              , d[1] = ""
+                                                              , d
+                                                              )
+                                                            : ( d[1] += c
+                                                              , d
+                                                              )
+                             , [[], ""]
+                             );
+    acc[1] && acc[0].push(acc[1].trim());                           
+    const tokens = acc[0];
+    
+    const vEditor = new VirtualEditor(realEditor.document.languageId);
+
+    return tokens.reduce( (p, t) => p.then(_ => {
+                                             const pos = vEditor.selection.active;
+                                             return vEditor.edit(eb => eb.insert(pos, t))
+                                                           .then(_ => {
+                                                                   const trimmed = t.trim(),
+                                                                         char    = trimmed.slice(-1);
+                                                                   return !trimmed ? Promise.resolve()
+                                                                                   :
+                                                       !",;{}[]():".includes(char) ? Promise.resolve()
+                                                                                   : fixOnType( { document: vEditor.document
+                                                                                                , contentChanges: [{ text: char
+                                                                                                                   , range: new vscode.Range( vEditor.selection.active.translate(0, -1)
+                                                                                                                                            , vEditor.selection.active
+                                                                                                                                            )
+                                                                                                                   , rangeLength: 0
+                                                                                                                   }] 
+                                                                                                }
+                                                                                              , vEditor
+                                                                                              )
+                                                                 })
+                                           })
+                        , Promise.resolve())
+                 .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
+                 .then(_ => realEditor.edit(eb => eb.replace(sel.union(sl_), vEditor.lines.join("\n"))))
+                 .then(_ => {
+                         const finalLines = vEditor.lines,
+                               endLine    = sel.start.line + finalLines.length - 1,
+                               endChar    = finalLines[finalLines.length - 1].length,
+                               newPos     = new vscode.Position(endLine, endChar);
+                         realEditor.selection = new vscode.Selection(newPos, newPos);
+                       })
+                 .catch(err => console.error("CommaFirst Logic Error:", err));
   }
 
-  function fixOnType(event) {
+  function fixOnType(event, currentEditor) {
+    const prevEd = editor;
+    editor = currentEditor;
     const change = event.contentChanges[0];
     const chgtxt = change?.text;
     const pairof = { "}": "{"
@@ -263,99 +357,100 @@ function activate(context) {
         nix = -1,
         ofs = -1;
 
-    !isDontCare(txt, pos) &&
-    !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
-                                                pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
-                                                                            , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                           , eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                                       , "\n" + " ".repeat(nix) + ": "
-                                                                                                                       )
-                                                                                                           ))
-                                                                                       : Promise.resolve()
+    return !isDontCare(txt, pos) &&
+           !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
+                                                       pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
+                                                                                   , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                                                  , eb.replace( new vscode.Range(pos,pos.translate(0,1))
+                                                                                                                              , "\n" + " ".repeat(nix) + ": "
+                                                                                                                              )
+                                                                                                                  ))
+                                                                                              : Promise.resolve()
+                                                                                   )
+                                                                                 : Promise.resolve()
+                                                     :
+                                     chgtxt === "?"  ? tefActive                &&
+                                                       txt[pix-1] === " "       &&
+                                                       pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
+                                                                                   , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                                                  , eb.insert( pos.translate(0, 1)
+                                                                                                                             , " "
+                                                                                                                             )
+                                                                                                                  , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                                             , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                                             )
+                                                                                                                  ))
+                                                                                             : Promise.resolve()
+                                                                                   )
+                                                                                 : Promise.resolve()
+                                                     :
+                                     chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
+                                                                                     : [-1, -1, false]
+                                                       , nix >= 0 &&
+                                                         act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
+                                                                                                                 , eb.insert(pos.translate(0, 1), " ")
+                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 , ofs = offsetOfRightPair(txt,pos)
+                                                                                                                 , ofs >= 0 && eb.insert( pos.translate(0, ofs)
+                                                                                                                                        , "\n" + " ".repeat(nix)
+                                                                                                                                        )
+                                                                                                                 ))
+                                                                                                     .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                             : editor.edit( eb => ( freeToFix = false
+                                                                                                                  , eb.insert(pos.translate(0,1), " ")
+                                                                                                                  , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                  ))
+                                                                                                     .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                  :
+                                                          dps     ? alignDeclaration(dps, pos, false)
+                                                                  : Promise.resolve()
+                                                       )
+                                                     :
+                                     chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos,";")[1]
+                                                                         : false
+                                                       , dps ? alignDeclaration(dps, pos, true)
+                                                             : Promise.resolve()
+                                                       )
+                                                     :
+                                     chgtxt === "."  ? smcActive          &&
+                                                       txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
+                                                                            , nix >= 0 && editor.edit( eb => ( freeToFix = false
+                                                                                                             , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                             ))
                                                                             )
                                                                           : Promise.resolve()
-                                              :
-                              chgtxt === "?"  ? tefActive                &&
-                                                txt[pix-1] === " "       &&
-                                                pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
-                                                                            , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                           , eb.insert( pos.translate(0, 1)
-                                                                                                                      , " "
-                                                                                                                      )
-                                                                                                           , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                                      , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
-                                                                                                                      )
-                                                                                                           ))
-                                                                                       : Promise.resolve()
-                                                                            )
-                                                                          : Promise.resolve()
-                                              :
-                              chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
-                                                                              : [-1, -1, false]
-                                                , nix >= 0 &&
-                                                  act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
-                                                                                                          , eb.insert(pos.translate(0, 1), " ")
+                                                     :
+                                     chgtxt === "{}" ? ( nix = difActive ? txt.slice(0,pos.character)
+                                                                              .search(/\bclass(?:\s+\${0,1}[\w\-]+\s*)*$|function(?:\s+\${0,1}[\w\-]+\s*)*\(.*?\)|(?<!(?:function|=>).*)(?:(?<=\s+)[\$\[]{0,1}[\w\-\]]+\s*\([^\(]*\)(?!.*[\(\.\,]))(?!.*(?:function|=>))|try\s*$|\(?\S*\)?(?=\s*=>\s*$)/)
+                                                                         : -1
+                                                       , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                      , eb.insert( pos.translate(0,1)
+                                                                                                 , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
+                                                                                                 )
+                                                                                      ))
+                                                                          .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                 : Promise.resolve()
+                                                       )
+                                                      :
+                                     chgtxt === "}" ||
+                                     chgtxt === ")" ||
+                                     chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
+                                                                                 : [-1, -1, false]
+                                                       , nix >= 0                   &&
+                                                         act                        &&
+                                                         txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( freeToFix = false
                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                          , ofs = offsetOfRightPair(txt,pos)
-                                                                                                          , ofs >= 0 && eb.insert( pos.translate(0, ofs)
-                                                                                                                                 , "\n" + " ".repeat(nix)
-                                                                                                                                 )
                                                                                                           ))
-                                                                                              .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                      : editor.edit( eb => ( freeToFix = false
-                                                                                                           , eb.insert(pos.translate(0,1), " ")
-                                                                                                           , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                           ))
-                                                                                              .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                           :
-                                                  dps      ? alignDeclaration(dps, pos, false)
-                                                           : Promise.resolve()
-                                                )
-                                              :
-                              chgtxt === ";"  ? ( dps = cflActive ? indexOfIndent(txt,pos,";")[1]
-                                                                  : false
-                                                , dps ? alignDeclaration(dps, pos, true)
-                                                      : Promise.resolve()
-                                                )
-                                              :
-                              chgtxt === "."  ? smcActive          &&
-                                                txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
-                                                                     , nix >= 0 && editor.edit(( freeToFix = false
-                                                                                               , eb => eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                               ))
-                                                                     )
-                                                                   : Promise.resolve()
-                                              :
-                              chgtxt === "{}" ? ( nix = difActive ? txt.slice(0,pos.character)
-                                                                       .search(/\bclass(?:\s+\${0,1}[\w\-]+\s*)*$|function(?:\s+\${0,1}[\w\-]+\s*)*\(.*?\)|(?<!(?:function|=>).*)(?:(?<=\s+)[\$\[]{0,1}[\w\-\]]+\s*\([^\(]*\)(?!.*[\(\.\,]))(?!.*(?:function|=>))|try\s*$|\(?\S*\)?(?=\s*=>\s*$)/)
-                                                                  : -1
-                                                , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                               , eb.insert( pos.translate(0,1)
-                                                                                          , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
-                                                                                          )
-                                                                               ))
-                                                                   .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                           : Promise.resolve()
-                                                )
-                                              :
-                              chgtxt === "}" ||
-                              chgtxt === ")" ||
-                              chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
-                                                                          : [-1, -1, false]
-                                                , nix >= 0                   &&
-                                                  act                        &&
-                                                  txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( freeToFix = false
-                                                                                                   , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                   ))
-                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 1))
-                                                                              : Promise.resolve()
-                                                )
-                                              : Promise.resolve()
-                            ).catch(err => console.log(err))
-                             .finally(_ => ( freeToFix = true
-                                           , _resolve()
-                                           ))
-                          : _resolve()
+                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                                     : Promise.resolve()
+                                                       )
+                                                     : Promise.resolve()
+                                    )
+                                    .catch(err => console.log(err))
+                                    .finally(_ => ( freeToFix = true
+                                                  , editor = prevEd
+                                                  ))
+                                 : Promise.resolve()
   }
 
   config.update("formatOnType", false, vscode.ConfigurationTarget.Global);
