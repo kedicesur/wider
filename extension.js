@@ -41,38 +41,50 @@ class VirtualEditor {
               });
 
     for (const e of edits) {
-      (e.type === 'i') ? this._insert(e.pos, e.val)
+      (e.type === 'i') ? this.#insert(e.pos, e.val)
                        :
-      (e.type === 'r') ? this._replace(e.range, e.val)
+      (e.type === 'r') ? this.#replace(e.range, e.val)
                        :
-      (e.type === 'd') ? this._replace(e.range, "")
+      (e.type === 'd') ? this.#replace(e.range, "")
                        : void 0;
     }
     return Promise.resolve(true);
   }
 
-  _insert(pos, txt) {
+  #insert(pos, txt) {
     const l     = this.lines[pos.line] || "",
           pre   = l.substring(0, pos.character),
           post  = l.substring(pos.character),
           parts = txt.split("\n");
     parts.length === 1 ? ( this.lines[pos.line] = pre + txt + post
-                         , this.selection = new vscode.Selection(pos.line, pos.character + txt.length, pos.line, pos.character + txt.length)
+                         , this.selection = new vscode.Selection( pos.line
+                                                                , pos.character + txt.length
+                                                                , pos.line
+                                                                , pos.character + txt.length
+                                                                )
                          )
                        : ( this.lines[pos.line] = pre + parts[0]
-                         , this.lines.splice(pos.line + 1, 0, ...parts.slice(1, -1), parts[parts.length - 1] + post)
-                         , this.selection = new vscode.Selection(pos.line + parts.length - 1, parts[parts.length - 1].length, pos.line + parts.length - 1, parts[parts.length - 1].length)
+                         , this.lines.splice( pos.line + 1
+                                            , 0
+                                            , ...parts.slice(1, -1)
+                                            , parts[parts.length - 1] + post
+                                            )
+                         , this.selection = new vscode.Selection( pos.line + parts.length - 1
+                                                                , parts[parts.length - 1].length
+                                                                , pos.line + parts.length - 1
+                                                                , parts[parts.length - 1].length
+                                                                )
                          );
   }
 
-  _replace(range, txt) {
+  #replace(range, txt) {
     // Delete then Insert
     const s  = range.start, e = range.end,
           l1 = this.lines[s.line],
           l2 = this.lines[e.line];
     this.lines[s.line] = l1.substring(0, s.character) + l2.substring(e.character);
     (e.line > s.line) && this.lines.splice(s.line + 1, e.line - s.line);
-    txt && this._insert(s, txt);
+    txt && this.#insert(s, txt);
   }
 }
 
@@ -328,7 +340,8 @@ function activate(context) {
                                                                                               )
                                                                  })
                                            })
-                        , Promise.resolve())
+                        , Promise.resolve()
+                        )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
                  .then(_ => realEditor.edit(eb => eb.replace(sel.union(sl_), vEditor.lines.join("\n"))))
                  .then(_ => {
