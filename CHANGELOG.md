@@ -74,7 +74,6 @@ Date: Mon Feb 05 2024 15:34:40 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Tue Feb 06 2024 00:39:14 GMT+0300 (GMT+03:00)
- 
 
     fix: delimiters in regexes and comments should be
          working better now.
@@ -83,7 +82,6 @@ Date: Tue Feb 06 2024 00:39:14 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Feb 11 2024 17:36:42 GMT+0300 (GMT+03:00)
- 
 
     fix: multiple delimiters at the end of the line
          confusing comma-first.
@@ -102,7 +100,6 @@ Date: Sun Feb 11 2024 17:36:42 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Feb 12 2024 17:02:48 GMT+0300 (GMT+03:00)
- 
 
     fix: single item/property arrays/objects shouldn't
          extend to the next line with comma-first.
@@ -110,7 +107,6 @@ Date: Mon Feb 12 2024 17:02:48 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Wed Feb 14 2024 21:43:08 GMT+0300 (GMT+03:00)
- 
 
     add: offsetOfRightPair() function
     fix: comma at first line of the block could break
@@ -119,7 +115,6 @@ Date: Wed Feb 14 2024 21:43:08 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 17 2024 15:04:31 GMT+0300 (GMT+03:00)
- 
 
     fix: made ternary to not work in objects due to
          conflicting colon operator in objects.
@@ -129,7 +124,6 @@ Date: Sat Feb 17 2024 15:04:31 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Feb 18 2024 13:36:20 GMT+0300 (GMT+03:00)
- 
 
     fix: menu typos and remove unnecessary parens.
          moved UNDO & REDO check to event listener.
@@ -139,7 +133,6 @@ Date: Sun Feb 18 2024 13:36:20 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Feb 19 2024 22:24:01 GMT+0300 (GMT+03:00)
- 
 
     fix: removed needless assignment to pos argument
          of indexOfIndent for ternaries. This way pos
@@ -163,14 +156,12 @@ Date: Mon Feb 19 2024 22:24:01 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 24 2024 16:30:22 GMT+0300 (GMT+03:00)
- 
 
     fix: ";" breaks bad. Seems fixed.
     ver: 0.2.6
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Feb 24 2024 17:41:33 GMT+0300 (GMT+03:00)
- 
 
     fix: Breaking Selection to Comma First when there
          are single line comments in the selection is
@@ -183,7 +174,6 @@ _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Feb 25 2024 18:55:41 GMT+0300 (GMT+03:00)
 
-
     fix: .alignDeclaration() fixed.
          Breaking Selection to Comma First when there
          are single line comments in the selection is
@@ -195,7 +185,6 @@ Date: Sun Feb 25 2024 18:55:41 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Feb 26 2024 16:34:12 GMT+0300 (GMT+03:00)
- 
 
     fix: restored .suppressIrrelevantCharacters() and
          .isDontCare() functions to previous state.
@@ -207,7 +196,6 @@ Date: Mon Feb 26 2024 16:34:12 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Feb 26 2024 22:28:29 GMT+0300 (GMT+03:00)
- 
 
     fix: .commaFirstSelection() function is more
          stable.
@@ -215,7 +203,6 @@ Date: Mon Feb 26 2024 22:28:29 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Thu Feb 29 2024 18:02:34 GMT+0300 (GMT+03:00)
- 
 
     fix: alignDeclaration() takes cursor to correct
          position when declarations end with ";".
@@ -228,7 +215,6 @@ _________________________________________________
 
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sat Mar 02 2024 19:43:02 GMT+0300 (GMT+03:00)
- 
 
     fix: stacked chaining is fine when an expression
          sequencing code block in a callback function
@@ -239,7 +225,6 @@ Date: Sat Mar 02 2024 19:43:02 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Mar 04 2024 01:42:38 GMT+0300 (GMT+03:00)
- 
 
     fix: when object returning expression sequences
          (comma first type paranthesised code blocks)
@@ -254,7 +239,6 @@ Date: Mon Mar 04 2024 01:42:38 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Fri Mar 08 2024 16:00:37 GMT+0300 (GMT+03:00)
- 
 
     fix: ";" works fine in variable declarations
          "{}" wont trigger if used as object parameter
@@ -276,7 +260,6 @@ Date: Fri Mar 08 2024 23:00:03 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 10 2024 15:25:05 GMT+0300 (GMT+03:00)
- 
 
     add: "{}" benefits from arrow functions along with
          computed keys of shorthand method definitions
@@ -285,7 +268,6 @@ Date: Sun Mar 10 2024 15:25:05 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 10 2024 22:25:11 GMT+0300 (GMT+03:00)
- 
 
     fix: object parameters are difficult when it comes
          to disabling them to trigger "{}" action. As
@@ -300,7 +282,6 @@ Date: Sun Mar 10 2024 22:25:11 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Mar 11 2024 00:19:33 GMT+0300 (GMT+03:00)
- 
 
     fix: bypassObject() function takes "try {" case
          into account yielding ternaries to work in
@@ -309,7 +290,6 @@ Date: Mon Mar 11 2024 00:19:33 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Wed Mar 13 2024 19:40:00 GMT+0300 (GMT+03:00)
- 
 
     fix: "{}" may this time work better in all kind of
          function / method definitions, destructuring
@@ -321,14 +301,12 @@ Date: Wed Mar 13 2024 19:40:00 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Thu Mar 14 2024 21:38:53 GMT+0300 (GMT+03:00)
- 
 
     fix: ternary works in =>{} type arrow functions
     ver: 0.2.20
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
-
 
     fix: in arrows "{}" only works when "{}" follows
          "=>\s*".
@@ -343,7 +321,6 @@ Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 17 2024 02:41:13 GMT+0300 (GMT+03:00)
- 
 
     fix: v2.21 fix for "fName({ method() })" was
          breaking "method({})".
@@ -351,7 +328,6 @@ Date: Sun Mar 17 2024 02:41:13 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
- 
 
     fix: object parameters coming after parameterized
          functions such as "someFunc(yyz(),{})" don't
@@ -362,7 +338,6 @@ Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Fri Jan 02 2026 22:55:11 GMT+0300 (GMT+03:00)
- 
 
     fix: rewrite comma first selection so that the
          whole change can be undone at one go.
@@ -371,3 +346,12 @@ Date: Fri Jan 02 2026 22:55:11 GMT+0300 (GMT+03:00)
          selection based formatting similar to comma
          first
     ver: 0.3.0
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date: Mon Jan 12 2026 22:13:48 GMT+0300 ()
+
+    fix: insert and replace methods of the virtual
+         editor to be private. 
+    mod: formatted some long function parameters
+         into comma first
+    ver: 0.3.1

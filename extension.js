@@ -78,7 +78,6 @@ class VirtualEditor {
   }
 
   #replace(range, txt) {
-    // Delete then Insert
     const s  = range.start, e = range.end,
           l1 = this.lines[s.line],
           l2 = this.lines[e.line];
@@ -257,8 +256,6 @@ function activate(context) {
     editor.selection = new vscode.Selection(pos, pos);
     return pos;
   }
-
-  // Formatting functions
 
   function alignDeclaration(dps, pos, lst){
     let lvi;
