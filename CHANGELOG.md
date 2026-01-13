@@ -351,7 +351,15 @@ Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Jan 12 2026 22:13:48 GMT+0300 ()
 
     fix: insert and replace methods of the virtual
-         editor to be private. 
+         editor to be private.
+         comma first selection on deep indented
+         objects breaking problem.
+         comma first selection now looks very solid.
+    add: head and tail selections to the user defined
+         selection in order to secure comma first
+         selection functionality on deep indented
+         object declarations such as the ones
+         defined under nested function definitions
     mod: formatted some long function parameters
          into comma first
     ver: 0.3.1

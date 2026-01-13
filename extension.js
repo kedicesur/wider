@@ -287,9 +287,9 @@ function activate(context) {
 
     const sel = realEditor.selection;
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
-    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
-    const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);                        // head selection including leading white spaces
-    const s_l = new vscode.Selection(spp, sel.end);                                                        // tail selection including last line after s_l 
+    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length);
+    const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);
+    const s_l = new vscode.Selection(spp, sel.end);
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Number.MAX_VALUE));
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
@@ -316,8 +316,8 @@ function activate(context) {
                              , [[], ""]
                              );
     acc[1] && acc[0].push(acc[1].trim());
-    const tokens = acc[0];
     
+    const tokens = acc[0];
     const vEditor = new VirtualEditor(realEditor.document.languageId);
 
     return tokens.reduce( (p, t) => p.then(_ => {
