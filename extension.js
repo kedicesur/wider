@@ -291,8 +291,12 @@ function activate(context) {
   function commaFirstSelection(realEditor) {
     // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
-    const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Infinity));
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
+    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
+    const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);                        // head selection including leading white spaces
+    const s_l = new vscode.Selection(spp, sel.end);                                                        // tail selection including last line after s_l 
+    const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Number.MAX_VALUE));
+    const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(rawTxt);
 
@@ -317,7 +321,7 @@ function activate(context) {
                                                               )
                              , [[], ""]
                              );
-    acc[1] && acc[0].push(acc[1].trim());                           
+    acc[1] && acc[0].push(acc[1].trim());
     const tokens = acc[0];
 
     // 3. Run Process in Isolation
@@ -344,13 +348,15 @@ function activate(context) {
                                                                                               )
                                                                  })
                                            })
-                        , Promise.resolve()
+                        , vEditor.edit(eb => eb.insert(new vscode.Position(0, 0), headTxt))
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
-                 .then(_ => realEditor.edit(eb => eb.replace(sel.union(sl_), vEditor.lines.join("\n"))))
+                 .then(_ => realEditor.edit(eb => eb.replace( [_sl,s_l,sl_].reduce((p,c) => p.union(c))
+                                                            , vEditor.lines.join("\n")
+                                                            )))
                  .then(_ => {
                          const finalLines = vEditor.lines,
-                               endLine    = sel.start.line + finalLines.length - 1,
+                               endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
                          realEditor.selection = new vscode.Selection(newPos, newPos);
