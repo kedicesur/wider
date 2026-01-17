@@ -327,26 +327,24 @@ function activate(context) {
     // 3. Run Process in Isolation
     const vEditor = new VirtualEditor(realEditor.document.languageId);
 
-    return tokens.reduce( (p, t) => p.then(_ => {
-                                             const pos = vEditor.selection.active;
-                                             return vEditor.edit(eb => eb.insert(pos, t))
-                                                           .then(_ => {
-                                                                   const trimmed = t.trim(),
-                                                                         char    = trimmed.slice(-1);
-                                                                   return !trimmed ? Promise.resolve()
-                                                                                   :
-                                                       !",;{}[]():".includes(char) ? Promise.resolve()
-                                                                                   : fixOnType( { document: vEditor.document
-                                                                                                , contentChanges: [{ text: char
-                                                                                                                   , range: new vscode.Range( vEditor.selection.active.translate(0, -1)
-                                                                                                                                            , vEditor.selection.active
-                                                                                                                                            )
-                                                                                                                   , rangeLength: 0
-                                                                                                                   }] 
-                                                                                                }
-                                                                                              , vEditor
-                                                                                              )
-                                                                 })
+    return tokens.reduce( (p, t) => p.then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, t)))
+                                     .then(_ => {
+                                             const cp = vEditor.selection.active;
+                                             const ch = t.trim()
+                                                         .slice(-1);
+                                             return cp.character > 0         &&
+                                                    ch !== ""                &&
+                                                    ",;{}[]()?:".includes(ch) ? fixOnType( { document: vEditor.document
+                                                                                           , contentChanges: [{ text: ch
+                                                                                                              , range: new vscode.Range( cp.translate(0,-1)
+                                                                                                                                       , cp
+                                                                                                                                       )
+                                                                                                              , rangeLength: 0
+                                                                                                              }] 
+                                                                                           }
+                                                                                         , vEditor
+                                                                                         )
+                                                                              : Promise.resolve()
                                            })
                         , vEditor.edit(eb => eb.insert(new vscode.Position(0, 0), headTxt))
                         )
