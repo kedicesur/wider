@@ -208,14 +208,14 @@ function activate(context) {
                                 :
                txt[pch] === "{" ? -1
                                 : 0;
-        DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
-                                                                                                                     .text)
-                                                                 , pln = tps.line
-                                                                 , pch = tps.character
-                                                                 )
-                                                               : cnt--
-                                                 )
+        DNSTR.includes(txt[pch]) ? mod === "t" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) ? ( tps = bypassObject(pos = new vscode.Position(pln, pch))
+                                                                                                       , tps !== pos ? ( txt = suppressIrrelevantCharacters( editor.document.lineAt( tps.line).text)
+                                                                                                                       , pln = tps.line
+                                                                                                                       , pch = tps.character
+                                                                                                                       )
+                                                                                                                     : cnt--
+                                                                                                       )
+                                                                                                     : void 0
                                                : cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
