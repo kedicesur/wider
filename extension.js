@@ -114,6 +114,9 @@ function activate(context) {
                   , vscode.commands.registerTextEditorCommand( "wider.commaFirstSelection"
                                                              , commaFirstSelection
                                                              )
+                  , vscode.commands.registerTextEditorCommand( "wider.formatSelectedTernary"
+                                                             , formatSelectedTernary
+                                                             )
                   );
 
   function updateActivators(){
@@ -254,6 +257,10 @@ function activate(context) {
     return chg.text === "" && chg.rangeLength > 0;
   }
 
+  function isTernaryQuestion(p, c, n) {
+  return c === "?" && p !== "?" && n !== "?" && n !== ".";
+  }
+
   function moveCursorTo(lin, chr){
     const pos = new vscode.Position(lin, chr);
     editor.selection = new vscode.Selection(pos, pos);
@@ -288,7 +295,8 @@ function activate(context) {
                              ));
   }
 
-  function commaFirstSelection(realEditor) {
+  // Unified helper function for formatting selected text for comma first and ternary
+  function formatSelection(realEditor, delimiters) {
     // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
@@ -311,8 +319,12 @@ function activate(context) {
                                                               , d
                                                               )
                                                             :
-                                   "}]),;".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
-                                                              , d[0].push(c)
+                                delimiters.includes(sup[i]) ? ( isTernaryQuestion(sup[i-1], sup[i], sup[i+1]) ? ( d[1] && d[0].push(d[1].trim() + " ")
+                                                                                                                , d[0].push(c + " ")
+                                                                                                                )
+                                                                                                              : ( d[1] && d[0].push(d[1].trim())
+                                                                                                                , d[0].push(c)
+                                                                                                                )
                                                               , d[1] = ""
                                                               , d
                                                               )
@@ -360,6 +372,17 @@ function activate(context) {
                          realEditor.selection = new vscode.Selection(newPos, newPos);
                        })
                  .catch(err => console.error("CommaFirst Logic Error:", err));
+  }
+
+  // Comma-first formatting for objects, arrays, and function arguments
+  function commaFirstSelection(realEditor) {
+    return formatSelection(realEditor, "}]),;");
+  }
+
+  // Ternary formatting for conditional expressions
+  function formatSelectedTernary(realEditor) {
+    // Additionally use ? and : as delimiters for ternary formatting
+    return formatSelection(realEditor, "}]),;?:");
   }
 
   function fixOnType(event, currentEditor) {
