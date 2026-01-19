@@ -363,3 +363,14 @@ Date: Mon Jan 12 2026 22:13:48 GMT+0300 ()
     mod: formatted some long function parameters
          into comma first
     ver: 0.3.1
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Mon Jan 19 02:18:51 2026 +0300
+
+    fix: "??" "??=" "?." false positive controls to
+         ternary formatting.
+    add: formatSelectedTernary menu functionality
+    mod: commaFirstSelection for unification with
+         formatSelectedTernary. renamed it to
+         formatSelection
+    ver: 0.4.0
