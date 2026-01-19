@@ -289,10 +289,8 @@ function activate(context) {
                              , eb.replace(sel,txt)
                              ));
   }
-
-  // Unified helper function for formatting selected text for comma first and ternary
+  
   function formatSelection(realEditor, delimiters) {
-    // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
     const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length);
@@ -367,14 +365,11 @@ function activate(context) {
                  .catch(err => console.error("CommaFirst Logic Error:", err));
   }
 
-  // Comma-first formatting for objects, arrays, and function arguments
   function commaFirstSelection(realEditor) {
     return formatSelection(realEditor, "}]),;");
   }
 
-  // Ternary formatting for conditional expressions
   function formatSelectedTernary(realEditor) {
-    // Additionally use ? and : as delimiters for ternary formatting
     return formatSelection(realEditor, "}]),;?:");
   }
 
