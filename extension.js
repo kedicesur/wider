@@ -111,6 +111,9 @@ function activate(context) {
                   , vscode.commands.registerTextEditorCommand( "wider.commaFirstSelection"
                                                              , commaFirstSelection
                                                              )
+                  , vscode.commands.registerTextEditorCommand( "wider.formatSelectedTernary"
+                                                             , formatSelectedTernary
+                                                             )
                   );
 
   function updateActivators(){
@@ -202,14 +205,14 @@ function activate(context) {
                                 :
                txt[pch] === "{" ? -1
                                 : 0;
-        DNSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
-                                                 , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
-                                                                                                                     .text)
-                                                                 , pln = tps.line
-                                                                 , pch = tps.character
-                                                                 )
-                                                               : cnt--
-                                                 )
+        DNSTR.includes(txt[pch]) ? mod === "t" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) ? ( tps = bypassObject(pos = new vscode.Position(pln, pch))
+                                                                                                       , tps !== pos ? ( txt = suppressIrrelevantCharacters( editor.document.lineAt( tps.line).text)
+                                                                                                                       , pln = tps.line
+                                                                                                                       , pch = tps.character
+                                                                                                                       )
+                                                                                                                     : cnt--
+                                                                                                       )
+                                                                                                     : void 0
                                                : cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
@@ -251,6 +254,10 @@ function activate(context) {
     return chg.text === "" && chg.rangeLength > 0;
   }
 
+  function isTernaryQuestion(p, c, n) {
+  return c === "?" && p !== "?" && n !== "?" && n !== ".";
+  }
+
   function moveCursorTo(lin, chr){
     const pos = new vscode.Position(lin, chr);
     editor.selection = new vscode.Selection(pos, pos);
@@ -282,9 +289,8 @@ function activate(context) {
                              , eb.replace(sel,txt)
                              ));
   }
-
-  function commaFirstSelection(realEditor) {
-
+  
+  function formatSelection(realEditor, delimiters) {
     const sel = realEditor.selection;
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
     const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length);
@@ -305,8 +311,12 @@ function activate(context) {
                                                               , d
                                                               )
                                                             :
-                                   "}]),;".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
-                                                              , d[0].push(c)
+                                delimiters.includes(sup[i]) ? ( isTernaryQuestion(sup[i-1], sup[i], sup[i+1]) ? ( d[1] && d[0].push(d[1].trim() + " ")
+                                                                                                                , d[0].push(c + " ")
+                                                                                                                )
+                                                                                                              : ( d[1] && d[0].push(d[1].trim())
+                                                                                                                , d[0].push(c)
+                                                                                                                )
                                                               , d[1] = ""
                                                               , d
                                                               )
@@ -320,26 +330,24 @@ function activate(context) {
     const tokens = acc[0];
     const vEditor = new VirtualEditor(realEditor.document.languageId);
 
-    return tokens.reduce( (p, t) => p.then(_ => {
-                                             const pos = vEditor.selection.active;
-                                             return vEditor.edit(eb => eb.insert(pos, t))
-                                                           .then(_ => {
-                                                                   const trimmed = t.trim(),
-                                                                         char    = trimmed.slice(-1);
-                                                                   return !trimmed ? Promise.resolve()
-                                                                                   :
-                                                       !",;{}[]():".includes(char) ? Promise.resolve()
-                                                                                   : fixOnType( { document: vEditor.document
-                                                                                                , contentChanges: [{ text: char
-                                                                                                                   , range: new vscode.Range( vEditor.selection.active.translate(0, -1)
-                                                                                                                                            , vEditor.selection.active
-                                                                                                                                            )
-                                                                                                                   , rangeLength: 0
-                                                                                                                   }] 
-                                                                                                }
-                                                                                              , vEditor
-                                                                                              )
-                                                                 })
+    return tokens.reduce( (p, t) => p.then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, t)))
+                                     .then(_ => {
+                                             const cp = vEditor.selection.active;
+                                             const ch = t.trim()
+                                                         .slice(-1);
+                                             return cp.character > 0         &&
+                                                    ch !== ""                &&
+                                                    ",;{}[]()?:".includes(ch) ? fixOnType( { document: vEditor.document
+                                                                                           , contentChanges: [{ text: ch
+                                                                                                              , range: new vscode.Range( cp.translate(0,-1)
+                                                                                                                                       , cp
+                                                                                                                                       )
+                                                                                                              , rangeLength: 0
+                                                                                                              }] 
+                                                                                           }
+                                                                                         , vEditor
+                                                                                         )
+                                                                              : Promise.resolve()
                                            })
                         , vEditor.edit(eb => eb.insert(new vscode.Position(0, 0), headTxt))
                         )
@@ -355,6 +363,14 @@ function activate(context) {
                          realEditor.selection = new vscode.Selection(newPos, newPos);
                        })
                  .catch(err => console.error("CommaFirst Logic Error:", err));
+  }
+
+  function commaFirstSelection(realEditor) {
+    return formatSelection(realEditor, "}]),;");
+  }
+
+  function formatSelectedTernary(realEditor) {
+    return formatSelection(realEditor, "}]),;?:");
   }
 
   function fixOnType(event, currentEditor) {
