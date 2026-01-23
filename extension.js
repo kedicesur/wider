@@ -438,7 +438,8 @@ function activate(context) {
     const pix    = pos.character;
     let act = true,
         nix = -1,
-        ofs = -1;
+        ofs = -1,
+        dps;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
@@ -451,10 +452,10 @@ function activate(context) {
                                                                   : Promise.resolve()
                                                        )
                                                      :
-                                     chgtxt === "?" &&
-                                     tefActive      &&
-                          pos === bypassObject(pos) &&
-                                  txt[pix-1] === " " ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
+                           chgtxt === "?"           &&
+                           tefActive                &&
+                           txt[pix-1] === " "       &&
+                           pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.insert( pos.translate(0, 1)
                                                                                                  , " "
