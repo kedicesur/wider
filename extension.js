@@ -438,14 +438,11 @@ function activate(context) {
     const pix    = pos.character;
     let act = true,
         nix = -1,
-        ofs = -1,
-        tps;
+        ofs = -1;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
-                                     tefActive       ? ( tps = isTernaryColon(pos)
-                                                       , nix = tps ? tps.character
-                                                                   : -1
+                                     tefActive       ? ( nix = isTernaryColon(pos)?.character ?? -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.replace( new vscode.Range(pos,pos.translate(0,1))
                                                                                                   , "\n" + " ".repeat(nix) + ": "
