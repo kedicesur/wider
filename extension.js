@@ -18,16 +18,6 @@ class VirtualEditor {
                                                                               , ...this.lines.slice(s.line + 1, e.line)
                                                                               , (this.lines[ e.line] ?? "").substring(0, e.character)
                                                                               ].join( "\n")
-          //  , getText: r => {
-          //               if (!r) return this.lines.join("\n");
-          //               const s = r.start,
-          //                     e = r.end;
-          //               if (s.line === e.line) return (this.lines[s.line] || "").substring(s.character, e.character);
-          //               return [ (this.lines[s.line] || "").substring(s.character)
-          //                      , ...this.lines.slice(s.line + 1, e.line)
-          //                      , (this.lines[e.line] || "").substring(0, e.character)
-          //                      ].join("\n");
-          //             }
            , get lineCount() { return this.lines.length; }
            , languageId: this.languageId
            };
@@ -222,7 +212,7 @@ function activate(context) {
                                                : cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( pos = new vscode.Position(pln,pch)
-                                                 , tps = pos // bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps = pos
                                                  , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
                                                                  , pln = tps.line
