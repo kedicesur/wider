@@ -12,16 +12,12 @@ class VirtualEditor {
                            , lineNumber: n
                            , isEmptyOrWhitespace: !/\S/.test(this.lines[n] || "")
                            })
-           , getText: r => {
-                        if (!r) return this.lines.join("\n");
-                        const s = r.start,
-                              e = r.end;
-                        if (s.line === e.line) return (this.lines[s.line] || "").substring(s.character, e.character);
-                        return [ (this.lines[s.line] || "").substring(s.character)
-                               , ...this.lines.slice(s.line + 1, e.line)
-                               , (this.lines[e.line] || "").substring(0, e.character)
-                               ].join("\n");
-                      }
+           , getText: ({ start: s, end: e } = {}) => !s ? this.lines.join("\n")
+                                                        : s.line === e.line ? (this.lines[ s.line] ?? "").substring(s.character, e.character)
+                                                                            : [ (this.lines[ s.line] ?? "").substring(s.character)
+                                                                              , ...this.lines.slice(s.line + 1, e.line)
+                                                                              , (this.lines[ e.line] ?? "").substring(0, e.character)
+                                                                              ].join( "\n")
            , get lineCount() { return this.lines.length; }
            , languageId: this.languageId
            };
@@ -206,7 +202,7 @@ function activate(context) {
                txt[pch] === "{" ? -1
                                 : 0;
         DNSTR.includes(txt[pch]) ? mod === "t" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) ? ( tps = bypassObject(pos = new vscode.Position(pln, pch))
-                                                                                                       , tps !== pos ? ( txt = suppressIrrelevantCharacters( editor.document.lineAt( tps.line).text)
+                                                                                                       , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line).text)
                                                                                                                        , pln = tps.line
                                                                                                                        , pch = tps.character
                                                                                                                        )
@@ -215,7 +211,8 @@ function activate(context) {
                                                                                                      : void 0
                                                : cnt--
                                  :
-        UPSTR.includes(txt[pch]) ? mod === "t" ? ( tps = bypassObject(pos = new vscode.Position(pln,pch))
+        UPSTR.includes(txt[pch]) ? mod === "t" ? ( pos = new vscode.Position(pln,pch)
+                                                 , tps = pos
                                                  , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
                                                                  , pln = tps.line
@@ -256,6 +253,38 @@ function activate(context) {
 
   function isTernaryQuestion(p, c, n) {
   return c === "?" && p !== "?" && n !== "?" && n !== ".";
+  }
+
+  function isTernaryColon(pos){
+    let pln = pos.line,
+        pch = pos.character,
+        txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text.substring(0,pch)),
+        bps;
+
+    while(pln >= 0){
+      while(pch-- > 0){
+        if ( txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1])
+                              :
+             txt[pch] === ":" ? true
+                              :
+             txt[pch] === "{" ? true
+                              :
+             txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
+                                , !bps.isEqual(new vscode.Position(pln,pch)) && ( pln = bps.line
+                                                                                , pch = bps.character
+                                                                                , txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+                                                                                )
+                                , false
+                                )
+                              : false
+           ) return txt[pch] === "?" ? new vscode.Position(pln, pch) 
+                                     : false;
+      }
+      pln-- && ( txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+               , pch = txt.length
+               );
+    }
+    return false;
   }
 
   function moveCursorTo(lin, chr){
@@ -387,34 +416,34 @@ function activate(context) {
     const pix    = pos.character;
     let act = true,
         nix = -1,
-        ofs = -1;
+        ofs = -1,
+        dps;
 
     return !isDontCare(txt, pos) &&
-           !isDeletion(change)   ? ( chgtxt === ":"  ? tefActive                &&
-                                                       pos === bypassObject(pos) ? ( nix = indexOfIndent(txt, pos, "t")[0]
-                                                                                   , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                                  , eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                                              , "\n" + " ".repeat(nix) + ": "
-                                                                                                                              )
-                                                                                                                  ))
-                                                                                              : Promise.resolve()
-                                                                                   )
-                                                                                 : Promise.resolve()
+           !isDeletion(change)   ? ( chgtxt === ":" &&
+                                     tefActive       ? ( nix = isTernaryColon(pos)?.character ?? -1
+                                                       , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                      , eb.replace( new vscode.Range(pos,pos.translate(0,1))
+                                                                                                  , "\n" + " ".repeat(nix) + ": "
+                                                                                                  )
+                                                                                      ))
+                                                                  : Promise.resolve()
+                                                       )
                                                      :
-                                     chgtxt === "?"  ? tefActive                &&
-                                                       txt[pix-1] === " "       &&
-                                                       pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
-                                                                                   , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                                                  , eb.insert( pos.translate(0, 1)
-                                                                                                                             , " "
-                                                                                                                             )
-                                                                                                                  , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                                             , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
-                                                                                                                             )
-                                                                                                                  ))
-                                                                                             : Promise.resolve()
-                                                                                   )
-                                                                                 : Promise.resolve()
+                           chgtxt === "?"           &&
+                           tefActive                &&
+                           txt[pix-1] === " "       &&
+                           pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
+                                                       , nix >= 0 ? editor.edit(eb => ( freeToFix = false
+                                                                                      , eb.insert( pos.translate(0, 1)
+                                                                                                 , " "
+                                                                                                 )
+                                                                                      , eb.insert( pos.translate(0, nix-pix+1)
+                                                                                                 , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                 )
+                                                                                      ))
+                                                                  : Promise.resolve()
+                                                       )
                                                      :
                                      chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
                                                                                      : [-1, -1, false]

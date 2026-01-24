@@ -301,13 +301,11 @@ Date: Wed Mar 13 2024 19:40:00 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Thu Mar 14 2024 21:38:53 GMT+0300 (GMT+03:00)
-
     fix: ternary works in =>{} type arrow functions
     ver: 0.2.20
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
-
     fix: in arrows "{}" only works when "{}" follows
          "=>\s*".
          arrow object methods defined under property
@@ -321,14 +319,12 @@ Date: Sun Mar 17 2024 01:15:14 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 17 2024 02:41:13 GMT+0300 (GMT+03:00)
-
     fix: v2.21 fix for "fName({ method() })" was
          breaking "method({})".
     ver: 0.2.22
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
-
     fix: object parameters coming after parameterized
          functions such as "someFunc(yyz(),{})" don't
          trigger method indenting.
@@ -338,7 +334,6 @@ Date: Sun Mar 24 2024 22:22:04 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Fri Jan 02 2026 22:55:11 GMT+0300 (GMT+03:00)
-
     fix: rewrite comma first selection so that the
          whole change can be undone at one go.
          several tiny issues
@@ -349,7 +344,6 @@ Date: Fri Jan 02 2026 22:55:11 GMT+0300 (GMT+03:00)
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date: Mon Jan 12 2026 22:13:48 GMT+0300 ()
-
     fix: insert and replace methods of the virtual
          editor to be private.
          comma first selection on deep indented
@@ -366,7 +360,6 @@ Date: Mon Jan 12 2026 22:13:48 GMT+0300 ()
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date:   Mon Jan 19 02:18:51 2026 +0300
-
     fix: "??" "??=" "?." false positive controls to
          ternary formatting.
     add: formatSelectedTernary menu functionality
@@ -374,3 +367,15 @@ Date:   Mon Jan 19 02:18:51 2026 +0300
          formatSelectedTernary. renamed it to
          formatSelection
     ver: 0.4.0
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Sat Jan 24 11:26:27 2026 +0300
+   fix: simplification at nix assignment when
+        chgtxt is ":". forgotten dps variable
+        defined in fixOnType.
+   add: isTernaryColon function to gain ternary
+        formatting ability within object literals
+        and modified fixOnType function accordingly
+   mod: the getText method of the returned object
+        by document accessor of the virtual editor.
+   ver: 0.4.1
