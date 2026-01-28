@@ -1,7 +1,6 @@
 const vscode = require('vscode');
 const DISPOSABLES = [];
 
-//Define Robust Virtual Editor
 class VirtualEditor {
   constructor(languageId = "javascript") {
     this.lines = [""];
@@ -19,21 +18,11 @@ class VirtualEditor {
                                                                               , ...this.lines.slice(s.line + 1, e.line)
                                                                               , (this.lines[ e.line] ?? "").substring(0, e.character)
                                                                               ].join( "\n")
-          //  , getText: r => {
-          //               if (!r) return this.lines.join("\n");
-          //               const s = r.start,
-          //                     e = r.end;
-          //               if (s.line === e.line) return (this.lines[s.line] || "").substring(s.character, e.character);
-          //               return [ (this.lines[s.line] || "").substring(s.character)
-          //                      , ...this.lines.slice(s.line + 1, e.line)
-          //                      , (this.lines[e.line] || "").substring(0, e.character)
-          //                      ].join("\n");
-          //             }
            , get lineCount() { return this.lines.length; }
            , languageId: this.languageId
            };
   }
-  // VSCode-compliant Edit: Atomic application
+  
   edit(callback) {
     const edits = [];
     callback({ insert: (pos, val) => edits.push({ type: 'i', pos, val })
@@ -41,7 +30,6 @@ class VirtualEditor {
              , delete: (range) => edits.push({ type: 'd', range })
              });
     
-    // Sort edits reverse-positional (Right-to-Left, Bottom-to-Top) to prevent index drift
     edits.sort((a, b) => {
                  const pA = a.pos || a.range.start,
                        pB = b.pos || b.range.start;
@@ -86,7 +74,6 @@ class VirtualEditor {
   }
 
   #replace(range, txt) {
-    // Delete then Insert
     const s  = range.start, e = range.end,
           l1 = this.lines[s.line],
           l2 = this.lines[e.line];
@@ -101,15 +88,15 @@ function activate(context) {
   let editor    = vscode.window.activeTextEditor,
       language  = editor?.document.languageId,
       freeToFix = true,
-      cflActive = language === "javascript" || language === "typescript", // comma first layout
-      difActive = cflActive,                                              // deep indented functions
-      smcActive = cflActive,                                              // stacked method chaining  
-      tefActive = cflActive;                                              // ternary formatting
+      cflActive = language === "javascript" || language === "typescript",
+      difActive = cflActive,
+      smcActive = cflActive,
+      tefActive = cflActive;
   
   console.log(`"Wider" is now active for ${language} language!'`);
   DISPOSABLES.push( vscode.workspace.onDidChangeTextDocument(e => e.contentChanges.length &&
-                                                                  e.reason === void 0     &&              // not UNDO (1) or REDO (2)
-                                                                  freeToFix               && fixOnType(e, editor) // see https://github.com/microsoft/vscode/issues/204018
+                                                                  e.reason === void 0     &&
+                                                                  freeToFix               && fixOnType(e, editor)
                                                             )
                   , vscode.workspace.onDidChangeConfiguration(e => e && updateActivators())
                   , vscode.window.onDidChangeActiveTextEditor(e => e && ( editor = e
@@ -225,7 +212,7 @@ function activate(context) {
                                                : cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( pos = new vscode.Position(pln,pch)
-                                                 , tps = pos // bypassObject(pos = new vscode.Position(pln,pch))
+                                                 , tps = pos
                                                  , tps !== pos ? ( txt = suppressIrrelevantCharacters(editor.document.lineAt(tps.line)
                                                                                                                      .text)
                                                                  , pln = tps.line
@@ -322,9 +309,7 @@ function activate(context) {
     return pos;
   }
 
-  // Formatting functions
-
-  function alignDeclaration(dps, pos, lst){ // THIS NEEDS TO BE FIXED AS DECLARATIONS IN FUNCTION DECLARATIONS EFFECT THE INDENTING
+  function alignDeclaration(dps, pos, lst){
     let lvi;
     const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
     const lns = editor.document.getText(sel)
@@ -349,26 +334,23 @@ function activate(context) {
                              , eb.replace(sel,txt)
                              ));
   }
-
-  // Unified helper function for formatting selected text for comma first and ternary
+  
   function formatSelection(realEditor, delimiters) {
-    // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
     const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
-    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
-    const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);                        // head selection including leading white spaces
-    const s_l = new vscode.Selection(spp, sel.end);                                                        // tail selection including last line after s_l 
+    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length);
+    const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);
+    const s_l = new vscode.Selection(spp, sel.end);
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Number.MAX_VALUE));
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
     const sup = suppressIrrelevantCharacters(rawTxt);
-
-    // 2. Tokenize (Mofied and Simplified)
+    
     const acc = rawTxt.split("")
                       .reduce( (d, c, i) => sup[i] === "\n" ? d
                                                             : 
                                      "{[(".includes(sup[i]) ? ( d[1] && d[0].push(d[1].trim())
-                                                              , d[0][d[0].length - 1]?.match(/[=:,)]$/) && (d[0][d[0].length - 1] += " ") // insert space if needed
+                                                              , d[0][d[0].length - 1]?.match(/[=:,)]$/) && (d[0][d[0].length - 1] += " ")
                                                               , d[0].push(c + " ")
                                                               , d[1] = ""
                                                               , d
@@ -389,9 +371,8 @@ function activate(context) {
                              , [[], ""]
                              );
     acc[1] && acc[0].push(acc[1].trim());
+    
     const tokens = acc[0];
-
-    // 3. Run Process in Isolation
     const vEditor = new VirtualEditor(realEditor.document.languageId);
 
     return tokens.reduce( (p, t) => p.then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, t)))
@@ -429,14 +410,11 @@ function activate(context) {
                  .catch(err => console.error("CommaFirst Logic Error:", err));
   }
 
-  // Comma-first formatting for objects, arrays, and function arguments
   function commaFirstSelection(realEditor) {
     return formatSelection(realEditor, "}]),;");
   }
 
-  // Ternary formatting for conditional expressions
   function formatSelectedTernary(realEditor) {
-    // Additionally use ? and : as delimiters for ternary formatting
     return formatSelection(realEditor, "}]),;?:");
   }
 
