@@ -257,20 +257,16 @@ function activate(context) {
 
   function isTernaryColon(pos){
     let pln   = pos.line,
-        pch   = pos.character,  // Start at the colon position
+        pch   = pos.character,
         depth = 0,
         done  = false,
         val,
         txt,
         bps;
-    
-      // Start at 0, will become 1 when we hit the typed colon
 
     while(pln >= 0 && !done){
       txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text);
-      
-      // On the starting line, we want to include the colon at pos.character in our search
-      // On subsequent lines, we search the entire line from the end
+
       while(pch >= 0 && !done) {
         txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
                            , !bps.isEqual(new vscode.Position(pln, pch)) && ( pln = bps.line
@@ -283,7 +279,7 @@ function activate(context) {
                            , val = false
                            )
                          :
-        txt[pch] === ":" ? depth++ // Nested colon found (includes the one we just typed on first iteration)
+        txt[pch] === ":" ? depth++
                          :
         txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) && ( depth--
                                                                                   , !depth && ( done = true
