@@ -379,3 +379,9 @@ Date:   Sat Jan 24 11:26:27 2026 +0300
    mod: the getText method of the returned object
         by document accessor of the virtual editor.
    ver: 0.4.1
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Wed Jan 28 22:33:32 2026 +0300
+   fix: isTernaryColon function for improved parsing
+        logic to fix the broken ternary formatting.
+   ver: 0.4.2
