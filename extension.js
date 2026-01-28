@@ -269,35 +269,51 @@ function activate(context) {
   }
 
   function isTernaryColon(pos){
-    let pln = pos.line,
-        pch = pos.character,
-        txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text.substring(0,pch)),
+    let pln   = pos.line,
+        pch   = pos.character,  // Start at the colon position
+        depth = 0,
+        done  = false,
+        val,
+        txt,
         bps;
+    
+      // Start at 0, will become 1 when we hit the typed colon
 
-    while(pln >= 0){
-      while(pch-- > 0){
-        if ( txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1])
-                              :
-             txt[pch] === ":" ? true
-                              :
-             txt[pch] === "{" ? true
-                              :
-             txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
-                                , !bps.isEqual(new vscode.Position(pln,pch)) && ( pln = bps.line
-                                                                                , pch = bps.character
-                                                                                , txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
-                                                                                )
-                                , false
-                                )
-                              : false
-           ) return txt[pch] === "?" ? new vscode.Position(pln, pch) 
-                                     : false;
+    while(pln >= 0 && !done){
+      txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text);
+      
+      // On the starting line, we want to include the colon at pos.character in our search
+      // On subsequent lines, we search the entire line from the end
+      while(pch >= 0 && !done) {
+        txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
+                           , !bps.isEqual(new vscode.Position(pln, pch)) && ( pln = bps.line
+                                                                            , pch = bps.character
+                                                                            , txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+                                                                            )
+                           )
+                         :
+        txt[pch] === "{" ? ( done = true
+                           , val = false
+                           )
+                         :
+        txt[pch] === ":" ? depth++ // Nested colon found (includes the one we just typed on first iteration)
+                         :
+        txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) && ( depth--
+                                                                                  , !depth && ( done = true
+                                                                                              , val = new vscode.Position(pln, pch)
+                                                                                              )
+                                                                                  )
+                         : void 0;
+        pch--;
       }
-      pln-- && ( txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
-               , pch = txt.length
+      !done && ( pln--
+               , pln >= 0 && ( txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+                             , pch = txt.length - 1
+                             )
                );
     }
-    return false;
+    return done ? val
+                : false;
   }
 
   function moveCursorTo(lin, chr){
