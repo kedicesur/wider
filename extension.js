@@ -256,35 +256,47 @@ function activate(context) {
   }
 
   function isTernaryColon(pos){
-    let pln = pos.line,
-        pch = pos.character,
-        txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text.substring(0,pch)),
+    let pln   = pos.line,
+        pch   = pos.character,
+        depth = 0,
+        done  = false,
+        val,
+        txt,
         bps;
 
-    while(pln >= 0){
-      while(pch-- > 0){
-        if ( txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1])
-                              :
-             txt[pch] === ":" ? true
-                              :
-             txt[pch] === "{" ? true
-                              :
-             txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
-                                , !bps.isEqual(new vscode.Position(pln,pch)) && ( pln = bps.line
-                                                                                , pch = bps.character
-                                                                                , txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
-                                                                                )
-                                , false
-                                )
-                              : false
-           ) return txt[pch] === "?" ? new vscode.Position(pln, pch) 
-                                     : false;
+    while(pln >= 0 && !done){
+      txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text);
+
+      while(pch >= 0 && !done) {
+        txt[pch] === "}" ? ( bps = bypassObject(new vscode.Position(pln, pch))
+                           , !bps.isEqual(new vscode.Position(pln, pch)) && ( pln = bps.line
+                                                                            , pch = bps.character
+                                                                            , txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+                                                                            )
+                           )
+                         :
+        txt[pch] === "{" ? ( done = true
+                           , val = false
+                           )
+                         :
+        txt[pch] === ":" ? depth++
+                         :
+        txt[pch] === "?" ? isTernaryQuestion(txt[pch-1], txt[pch], txt[pch+1]) && ( depth--
+                                                                                  , !depth && ( done = true
+                                                                                              , val = new vscode.Position(pln, pch)
+                                                                                              )
+                                                                                  )
+                         : void 0;
+        pch--;
       }
-      pln-- && ( txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
-               , pch = txt.length
+      !done && ( pln--
+               , pln >= 0 && ( txt = suppressIrrelevantCharacters(editor.document.lineAt(pln).text)
+                             , pch = txt.length - 1
+                             )
                );
     }
-    return false;
+    return done ? val
+                : false;
   }
 
   function moveCursorTo(lin, chr){
