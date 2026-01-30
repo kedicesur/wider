@@ -170,8 +170,8 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? /(?:\)|try|=>)\s*\{/.test(txt.substring(0,pch+1)) ? pos
-                                                                    : new vscode.Position(pln,pch)
+    return !cnt ? /(?:\)|try|=>)\s*\{$/.test(txt.substring(0,pch+1)) ? pos
+                                                                     : new vscode.Position(pln,pch)
                 : pos;
   }
  
@@ -251,6 +251,11 @@ function activate(context) {
     return chg.text === "" && chg.rangeLength > 0;
   }
 
+  function isEmptyBetweenBrackets(txt, pos, openChar) {
+    const str = txt.slice(0, pos).trimEnd();
+    return str.endsWith(openChar) ? str.length : -1;
+  }
+
   function isTernaryQuestion(p, c, n) {
   return c === "?" && p !== "?" && n !== "?" && n !== ".";
   }
@@ -275,9 +280,9 @@ function activate(context) {
                                                                             )
                            )
                          :
-        txt[pch] === "{" ? ( done = true
-                           , val = false
-                           )
+        txt[pch] === "{" ? !/(?:\)|try|=>)\s*$/.test(txt.substring(0, pch)) && ( done = true
+                                                                               , val = false
+                                                                               )
                          :
         txt[pch] === ":" ? depth++
                          :
@@ -469,10 +474,10 @@ function activate(context) {
                                                                                                                                         )
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                             : editor.edit( eb => ( freeToFix = false
-                                                                                                                  , eb.insert(pos.translate(0,1), " ")
-                                                                                                                  , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                                  ))
+                                                                                             : editor.edit(eb => ( freeToFix = false
+                                                                                                                 , eb.insert(pos.translate(0,1), " ")
+                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                   :
                                                           dps     ? alignDeclaration(dps, pos, false)
@@ -487,9 +492,9 @@ function activate(context) {
                                                      :
                                      chgtxt === "."  ? smcActive          &&
                                                        txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
-                                                                            , nix >= 0 && editor.edit( eb => ( freeToFix = false
-                                                                                                             , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                             ))
+                                                                            , nix >= 0 && editor.edit(eb => ( freeToFix = false
+                                                                                                            , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                            ))
                                                                             )
                                                                           : Promise.resolve()
                                                      :
@@ -507,15 +512,23 @@ function activate(context) {
                                                       :
                                      chgtxt === "}" ||
                                      chgtxt === ")" ||
-                                     chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
-                                                                                 : [-1, -1, false]
-                                                       , nix >= 0                   &&
-                                                         act                        &&
-                                                         txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( freeToFix = false
-                                                                                                          , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                          ))
-                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
-                                                                                     : Promise.resolve()
+                                     chgtxt === "]"  ? ( nix = isEmptyBetweenBrackets(txt, pos.character, pairof[chgtxt])
+                                                       , nix >= 0 ? ( freeToFix = false
+                                                                    , editor.edit(eb => eb.delete(new vscode.Range( new vscode.Position(pos.line, nix)
+                                                                                                                  , new vscode.Position(pos.line, pos.character)
+                                                                                                                  )))
+                                                                            .then( _ => moveCursorTo(pos.line, nix + 1))
+                                                                    )
+                                                                  : ( [nix,, act] = cflActive ? indexOfIndent(txt, pos, chgtxt)
+                                                                                              : [-1, -1, false]
+                                                                    , nix >= 0                    &&
+                                                                      act                         &&
+                                                                      txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
+                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + " ".repeat( nix)))
+                                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                                                     )
+                                                                                                   : Promise.resolve()
+                                                                    )
                                                        )
                                                      : Promise.resolve()
                                     )
