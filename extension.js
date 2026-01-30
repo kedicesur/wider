@@ -170,8 +170,8 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? /(?:\)|try|=>)\s*\{/.test(txt.substring(0,pch+1)) ? pos
-                                                                    : new vscode.Position(pln,pch)
+    return !cnt ? /(?:\)|try|=>)\s*\{$/.test(txt.substring(0,pch+1)) ? pos
+                                                                     : new vscode.Position(pln,pch)
                 : pos;
   }
  
