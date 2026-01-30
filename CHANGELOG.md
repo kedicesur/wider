@@ -410,3 +410,9 @@ Date:   Fri Jan 30 18:44:06 2026 +0300
          opeaning "{" are on the same line.
          empty braces, square braces and parens.
     ver: v0.4.3
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Fri Jan 30 20:22:12 2026 +0300
+
+    fix: CHANGELOG.md broken format fix
+    ver: v0.4.4
