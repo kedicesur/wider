@@ -19,16 +19,6 @@ class VirtualEditor {
                                                                               , ...this.lines.slice(s.line + 1, e.line)
                                                                               , (this.lines[ e.line] ?? "").substring(0, e.character)
                                                                               ].join( "\n")
-          //  , getText: r => {
-          //               if (!r) return this.lines.join("\n");
-          //               const s = r.start,
-          //                     e = r.end;
-          //               if (s.line === e.line) return (this.lines[s.line] || "").substring(s.character, e.character);
-          //               return [ (this.lines[s.line] || "").substring(s.character)
-          //                      , ...this.lines.slice(s.line + 1, e.line)
-          //                      , (this.lines[e.line] || "").substring(0, e.character)
-          //                      ].join("\n");
-          //             }
            , get lineCount() { return this.lines.length; }
            , languageId: this.languageId
            };
@@ -264,6 +254,11 @@ function activate(context) {
     return chg.text === "" && chg.rangeLength > 0;
   }
 
+  function isEmptyBetweenBrackets(txt, pos, openChar) {
+    const str = txt.slice(0, pos).trimEnd();
+    return str.endsWith(openChar) ? str.length : -1;
+  }
+
   function isTernaryQuestion(p, c, n) {
   return c === "?" && p !== "?" && n !== "?" && n !== ".";
   }
@@ -292,9 +287,9 @@ function activate(context) {
                                                                             )
                            )
                          :
-        txt[pch] === "{" ? ( done = true
-                           , val = false
-                           )
+        txt[pch] === "{" ? !/(?:\)|try|=>)\s*$/.test(txt.substring(0, pch)) && ( done = true  // If NOT preceded by =>, ), or try then "{" is not a block start but an object literal opener.
+                                                                               , val = false  // So colon can not belong to a ternary. Do not keep scanning backwards
+                                                                               )
                          :
         txt[pch] === ":" ? depth++ // Nested colon found (includes the one we just typed on first iteration)
                          :
@@ -495,10 +490,10 @@ function activate(context) {
                                                                                                                                         )
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
-                                                                                             : editor.edit( eb => ( freeToFix = false
-                                                                                                                  , eb.insert(pos.translate(0,1), " ")
-                                                                                                                  , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                                  ))
+                                                                                             : editor.edit(eb => ( freeToFix = false
+                                                                                                                 , eb.insert(pos.translate(0,1), " ")
+                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                   :
                                                           dps     ? alignDeclaration(dps, pos, false)
@@ -513,9 +508,9 @@ function activate(context) {
                                                      :
                                      chgtxt === "."  ? smcActive          &&
                                                        txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
-                                                                            , nix >= 0 && editor.edit( eb => ( freeToFix = false
-                                                                                                             , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                             ))
+                                                                            , nix >= 0 && editor.edit(eb => ( freeToFix = false
+                                                                                                            , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                            ))
                                                                             )
                                                                           : Promise.resolve()
                                                      :
@@ -533,15 +528,23 @@ function activate(context) {
                                                       :
                                      chgtxt === "}" ||
                                      chgtxt === ")" ||
-                                     chgtxt === "]"  ? ( [nix,, act] = cflActive ? indexOfIndent(txt,pos,chgtxt)
-                                                                                 : [-1, -1, false]
-                                                       , nix >= 0                   &&
-                                                         act                        &&
-                                                         txt[nix] !== pairof[chgtxt] ? editor.edit( eb => ( freeToFix = false
-                                                                                                          , eb.insert(pos, "\n" + " ".repeat(nix))
-                                                                                                          ))
-                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
-                                                                                     : Promise.resolve()
+                                     chgtxt === "]"  ? ( nix = isEmptyBetweenBrackets(txt, pos.character, pairof[chgtxt])
+                                                       , nix >= 0 ? ( freeToFix = false
+                                                                    , editor.edit(eb => eb.delete(new vscode.Range( new vscode.Position(pos.line, nix)
+                                                                                                                  , new vscode.Position(pos.line, pos.character)
+                                                                                                                  )))
+                                                                            .then( _ => moveCursorTo(pos.line, nix + 1))
+                                                                    )
+                                                                  : ( [nix,, act] = cflActive ? indexOfIndent(txt, pos, chgtxt)
+                                                                                              : [-1, -1, false]
+                                                                    , nix >= 0                    &&
+                                                                      act                         &&
+                                                                      txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
+                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + " ".repeat( nix)))
+                                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                                                     )
+                                                                                                   : Promise.resolve()
+                                                                    )
                                                        )
                                                      : Promise.resolve()
                                     )
