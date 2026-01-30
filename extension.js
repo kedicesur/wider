@@ -280,8 +280,8 @@ function activate(context) {
                                                                             )
                            )
                          :
-        txt[pch] === "{" ? !/(?:\)|try|=>)\s*$/.test(txt.substring(0, pch)) && ( done = true  // If NOT preceded by =>, ), or try then "{" is not a block start but an object literal opener.
-                                                                               , val = false  // So colon can not belong to a ternary. Do not keep scanning backwards
+        txt[pch] === "{" ? !/(?:\)|try|=>)\s*$/.test(txt.substring(0, pch)) && ( done = true
+                                                                               , val = false
                                                                                )
                          :
         txt[pch] === ":" ? depth++
