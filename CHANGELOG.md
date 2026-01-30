@@ -378,34 +378,35 @@ _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date:   Sat Jan 24 11:26:27 2026 +0300
 
-   fix: simplification at nix assignment when
-        chgtxt is ":". forgotten dps variable
-        defined in fixOnType.
-   add: isTernaryColon function to gain ternary
-        formatting ability within object literals
-        and modified fixOnType function accordingly
-   mod: the getText method of the returned object
-        by document accessor of the virtual editor.
-   ver: 0.4.1
+    fix: simplification at nix assignment when
+         chgtxt is ":". forgotten dps variable
+         defined in fixOnType.
+    add: isTernaryColon function to gain ternary
+         formatting ability within object literals
+         and modified fixOnType function accordingly
+    mod: the getText method of the returned object
+         by document accessor of the virtual editor.
+    ver: 0.4.1
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date:   Wed Jan 28 22:33:32 2026 +0300
 
-   fix: isTernaryColon function for improved parsing
-        logic to fix the broken ternary formatting.
-   ver: 0.4.2
+    fix: isTernaryColon function for improved parsing
+         logic to fix the broken ternary formatting.
+    ver: 0.4.2
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date:   Fri Jan 30 18:44:06 2026 +0300
 
-   add: functionality to not leave whitespace in
-   fix: isTernaryColon function due to ternary colon
-        not formatting correcly when there is block
-        starting with "{" in ternary branch. such as
-        an arror function block.
-        bypassObject function due to blocks
-        containing object literals were breaking if
-        the block opening "{"} and object literal
-        opeaning "{" are on the same line.
-        empty braces, square braces and parens.
-   ver: v0.4.3
+    add: functionality to not leave whitespace in
+         empty braces, square braces and parens.
+    fix: isTernaryColon function due to ternary colon
+         not formatting correcly when there is block
+         starting with "{" in ternary branch. such as
+         an arror function block.
+         bypassObject function due to blocks
+         containing object literals were breaking if
+         the block opening "{"} and object literal
+         opeaning "{" are on the same line.
+         empty braces, square braces and parens.
+    ver: v0.4.3
