@@ -409,10 +409,18 @@ Date:   Fri Jan 30 18:44:06 2026 +0300
          the block opening "{"} and object literal
          opeaning "{" are on the same line.
          empty braces, square braces and parens.
-    ver: v0.4.3
+    ver: 0.4.3
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
 Date:   Fri Jan 30 20:22:12 2026 +0300
 
     fix: CHANGELOG.md broken format fix
-    ver: v0.4.4
+    ver: 0.4.4
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Sat Jan 31 17:04:57 2026 +0300
+
+    fix: add getPreviousMethodIndex function for
+         improved previous method index retrieval
+         for stacked method chaning functionality
+    ver: 0.4.5
