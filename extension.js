@@ -170,7 +170,7 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? /(?:\)\s*(?::.*?)?|try|=>)\s*\{$/.test(txt.substring(0,pch+1)) ? pos // regex includes ) followed by a TS type annotation or not, => or try before { so not an object literal
+    return !cnt ? /(?:\)\s*(?::.*?)?|try|=>)\s*\{$/.test(txt.substring(0,pch+1)) ? pos
                                                                                  : new vscode.Position(pln,pch)
                 : pos;
   }
