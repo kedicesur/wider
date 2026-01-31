@@ -177,6 +177,15 @@ function activate(context) {
                                                                      : new vscode.Position(pln,pch)
                 : pos;
   }
+
+  function getPreviousMethodIndex(txt) {
+    
+    // Match: .methodName at the end of the string
+    // Allows optional chaining (?.foo) because we match the dot before foo
+    const match = txt.match(/\.([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
+    
+    return match ? match.index : -1;
+  }
  
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
@@ -235,7 +244,7 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? [txt.lastIndexOf(".", pch), false, false]
+    return !cnt ? mod === "." ? [getPreviousMethodIndex(txt.slice(0,pch)), false, false] // send the slice of the line text coming before "(" to get previous method's index or -1
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
