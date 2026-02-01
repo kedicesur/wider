@@ -189,7 +189,7 @@ function activate(context) {
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
                                       :
-                          mod === "." ? [")].", "([."]
+                          mod === "." ? [")]", "(["]
                                       :
                           mod === ")" ? [")", "("]
                                       :
