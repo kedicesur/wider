@@ -432,3 +432,11 @@ Date:   Sat Jan 31 22:11:18 2026 +0300
          improved ternary handling when there is
          TypeScript function return types.
     ver: 0.4.6
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Sun Feb 1 23:05:11 2026 +0300
+
+    fix: correct indexOfIndent function to properly
+         handle bracket matching for stacked method
+         chaining
+    ver: 0.4.7

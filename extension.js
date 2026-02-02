@@ -183,7 +183,8 @@ function activate(context) {
   function indexOfIndent(txt, pos, mod){
     const [UPSTR,DNSTR] = mod === "t" ? [":", "?"]
                                       :
-                          mod === "." ||
+                          mod === "." ? [")]", "(["]
+                                      :
                           mod === ")" ? [")", "("]
                                       :
                           mod === "}" ? ["}", "{"]
@@ -237,7 +238,8 @@ function activate(context) {
                       , pch = txt.length
                       );
     }
-    return !cnt ? mod === "." ? [getPreviousMethodIndex(txt.slice(0,pch)), false, false] // send the slice of the line text coming before "(" to get previous method's index or -1
+    return !cnt ? mod === "." ? /[\])]$/.test(txt.slice(0,pch)) ? indexOfIndent(txt.slice(0,pch+1), new vscode.Position(pln,pch-1), ".")
+                                                                : [getPreviousMethodIndex(txt.slice(0,pch)), false, false]
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
@@ -496,7 +498,7 @@ function activate(context) {
                                                        )
                                                      :
                                      chgtxt === "."  ? smcActive          &&
-                                                       txt[pix-1] === ")" ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
+                                                ")]".includes(txt[pix-1]) ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
                                                                             , nix >= 0 && editor.edit(eb => ( freeToFix = false
                                                                                                             , eb.insert(pos, "\n" + " ".repeat(nix))
                                                                                                             ))
