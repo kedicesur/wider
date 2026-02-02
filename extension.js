@@ -239,7 +239,7 @@ function activate(context) {
                       );
     }
     return !cnt ? mod === "." ? /[\])]$/.test(txt.slice(0,pch)) ? indexOfIndent(txt.slice(0,pch+1), new vscode.Position(pln,pch-1), ".")
-                                                                : [getPreviousMethodIndex(txt.slice(0,pch)), false, false] // send the slice of the line text coming before "(" to get previous method's index or -1
+                                                                : [getPreviousMethodIndex(txt.slice(0,pch)), false, false]
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
