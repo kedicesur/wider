@@ -422,7 +422,7 @@ Date:   Sat Jan 31 17:04:57 2026 +0300
 
     fix: add getPreviousMethodIndex function for
          improved previous method index retrieval
-         for stacked method chaning functionality
+         for stacked method chaining functionality
     ver: 0.4.5
 _________________________________________________
 Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
@@ -440,3 +440,11 @@ Date:   Sun Feb 1 23:05:11 2026 +0300
          handle bracket matching for stacked method
          chaining
     ver: 0.4.7
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Sun Feb 8 18:13:09 2026 +0300
+
+    fix: monster regex for "{}" to correct wrong
+         indenting when there is whitespace between
+         paranthesised arguments of arrow functions
+    ver: 0.4.8
