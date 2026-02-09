@@ -473,10 +473,10 @@ function activate(context) {
                                                                   : Promise.resolve()
                                                        )
                                                      :
-                           chgtxt === "?"           &&
-                           tefActive                &&
-                           txt[pix-1] === " "       &&
-                           pos === bypassObject(pos) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
+                                 chgtxt === "?"     &&
+                                 tefActive          &&
+                                 txt[pix-1] === " " &&
+    (pos === bypassObject(pos) || /^\s*:/.test(txt)) ? ( nix = suppressIrrelevantCharacters(txt).lastIndexOf(":", pix)
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.insert( pos.translate(0, 1)
                                                                                                  , " "
