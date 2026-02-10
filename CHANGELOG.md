@@ -448,3 +448,11 @@ Date:   Sun Feb 8 18:13:09 2026 +0300
          indenting when there is whitespace between
          paranthesised arguments of arrow functions
     ver: 0.4.8
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Tue Feb 10 01:30:18 2026 +0300
+
+    fix: add condition for text with leading colon in
+         the line to allow ternary formatting for "?"
+         logic when in an object literal
+    ver: 0.4.9
