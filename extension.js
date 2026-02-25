@@ -355,11 +355,43 @@ function activate(context) {
                              ));
   }
 
+  function extractComments(txt) {
+    const commentsMap  = new Map(),
+          strippedText = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
+                                    , (_match, code, comment) => {
+                                        const trimmed = code.trim();
+                                        if (trimmed !== '') {
+                                          const key = trimmed.replace(/[\s,;]+/g, '');
+                                          !commentsMap.has(key) && commentsMap.set(key, []);
+                                          commentsMap.get(key)
+                                                     .push(" " + comment.trim());
+                                        }
+                                        return code;
+                                      }
+                                    );
+    return { strippedText, commentsMap };
+  }
+
+  function reattachComments(lines, commentsMap) {
+    return lines.map(line => {
+                       const trimmed = line.trim();
+                       if (trimmed !== '') {
+                         const key = trimmed.replace(/[\s,;]+/g, '');
+                         const queuedComments = commentsMap.get(key);
+                         if (queuedComments && queuedComments.length > 0) {
+                           return line + queuedComments.shift();
+                         }
+                       }
+                       return line;
+                     });
+  }
+
   // Unified helper function for formatting selected text for comma first and ternary
   function formatSelection(realEditor, delimiters) {
     // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
-    const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
+    const fullTxt = realEditor.document.getText(sel);
+    const { strippedText: rawTxt, commentsMap } = extractComments(fullTxt);
     const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
     const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);                        // head selection including leading white spaces
     const s_l = new vscode.Selection(spp, sel.end);                                                        // tail selection including last line after s_l 
@@ -421,15 +453,17 @@ function activate(context) {
                         , vEditor.edit(eb => eb.insert(new vscode.Position(0, 0), headTxt))
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
-                 .then(_ => realEditor.edit(eb => eb.replace( [_sl,s_l,sl_].reduce((p,c) => p.union(c))
-                                                            , vEditor.lines.join("\n")
-                                                            )))
                  .then(_ => {
-                         const finalLines = vEditor.lines,
+                         const finalLines = reattachComments(vEditor.lines, commentsMap),
                                endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
-                         realEditor.selection = new vscode.Selection(newPos, newPos);
+                         return realEditor.edit(eb => eb.replace( [_sl,s_l,sl_].reduce((p,c) => p.union(c))
+                                                                , finalLines.join("\n")
+                                                                ))
+                                          .then(_ => {
+                                                  realEditor.selection = new vscode.Selection(newPos, newPos);
+                                                });
                        })
                  .catch(err => console.error("CommaFirst Logic Error:", err));
   }
