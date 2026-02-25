@@ -456,3 +456,22 @@ Date:   Tue Feb 10 01:30:18 2026 +0300
          the line to allow ternary formatting for "?"
          logic when in an object literal
     ver: 0.4.9
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Wed Feb 25 22:56:24 2026 +0300
+
+    add: comma first selection now preserves comments
+    fix: preserve comments during text formatting
+         operations by extracting and reattaching
+         them. The previous exact key matching in
+         comment reattachment failed when whitespace
+         or other variations existed between code
+         and comments. Now uses a variety of
+         key.includes() for more flexible matching.
+         Also fixes operation order where strippedText
+         was referenced before computation.
+         improve comment matching to use partial
+         key matching. Still may behave weirdly. So
+         be careful using this functionality if
+         comments are involved.
+    ver : 0.4.10
