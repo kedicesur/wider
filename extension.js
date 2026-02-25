@@ -356,9 +356,9 @@ function activate(context) {
   }
 
   function extractComments(txt) {
-    const commentsMap  = new Map(),
-          strippedText = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
-                                    , (_match, code, comment) => {
+    const commentsMap = new Map(),
+          rawTxt      = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
+                                   , (_match, code, comment) => {
                                         const trimmed = code.trim();
                                         if (trimmed !== '') {
                                           const key = trimmed.replace(/[\s,;]+/g, '');
@@ -368,8 +368,8 @@ function activate(context) {
                                         }
                                         return code;
                                       }
-                                    );
-    return { strippedText, commentsMap };
+                                   );
+    return { rawTxt, commentsMap };
   }
 
   function reattachComments(lines, commentsMap) {
@@ -377,9 +377,10 @@ function activate(context) {
                        const trimmed = line.trim();
                        if (trimmed !== '') {
                          const key = trimmed.replace(/[\s,;]+/g, '');
-                         const queuedComments = commentsMap.get(key);
-                         if (queuedComments && queuedComments.length > 0) {
-                           return line + queuedComments.shift();
+                         for (const [storedKey, comments] of commentsMap) {
+                           if (comments.length > 0 && key.includes(storedKey)) {
+                             line += comments.shift();
+                           }
                          }
                        }
                        return line;
@@ -391,13 +392,14 @@ function activate(context) {
     // 1. Setup Selection and Context (Same as original)
     const sel = realEditor.selection;
     const fullTxt = realEditor.document.getText(sel);
-    const { strippedText: rawTxt, commentsMap } = extractComments(fullTxt);
-    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
+    const spp = new vscode.Position(sel.start.line, sel.start.character + fullTxt.match(/^\s*/)[0].length); // split position between _sl and s_l
     const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);                        // head selection including leading white spaces
     const s_l = new vscode.Selection(spp, sel.end);                                                        // tail selection including last line after s_l 
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Number.MAX_VALUE));
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
+
+    const { rawTxt, commentsMap } = extractComments(fullTxt);
     const sup = suppressIrrelevantCharacters(rawTxt);
 
     // 2. Tokenize (Mofied and Simplified)
