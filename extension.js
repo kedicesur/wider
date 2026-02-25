@@ -342,16 +342,50 @@ function activate(context) {
                              , eb.replace(sel,txt)
                              ));
   }
-  
+
+  function extractComments(txt) {
+    const commentsMap = new Map(),
+          rawTxt      = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
+                                   , (_match, code, comment) => {
+                                        const trimmed = code.trim();
+                                        if (trimmed !== '') {
+                                          const key = trimmed.replace(/[\s,;]+/g, '');
+                                          !commentsMap.has(key) && commentsMap.set(key, []);
+                                          commentsMap.get(key)
+                                                     .push(" " + comment.trim());
+                                        }
+                                        return code;
+                                      }
+                                   );
+    return { rawTxt, commentsMap };
+  }
+
+  function reattachComments(lines, commentsMap) {
+    return lines.map(line => {
+                       const trimmed = line.trim();
+                       if (trimmed !== '') {
+                         const key = trimmed.replace(/[\s,;]+/g, '');
+                         for (const [storedKey, comments] of commentsMap) {
+                           if (comments.length > 0 && key.includes(storedKey)) {
+                             line += comments.shift();
+                           }
+                         }
+                       }
+                       return line;
+                     });
+  }
+
   function formatSelection(realEditor, delimiters) {
     const sel = realEditor.selection;
-    const rawTxt = realEditor.document.getText(sel).replace(/(?<![:\/])\/\/.*$/gm, "");
-    const spp = new vscode.Position(sel.start.line, sel.start.character + rawTxt.match(/^\s*/)[0].length);
+    const fullTxt = realEditor.document.getText(sel);
+    const spp = new vscode.Position(sel.start.line, sel.start.character + fullTxt.match(/^\s*/)[0].length);
     const _sl = new vscode.Selection( new vscode.Position(sel.start.line, 0), spp);
     const s_l = new vscode.Selection(spp, sel.end);
     const sl_ = new vscode.Selection(sel.end, new vscode.Position(sel.end.line, Number.MAX_VALUE));
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
+
+    const { rawTxt, commentsMap } = extractComments(fullTxt);
     const sup = suppressIrrelevantCharacters(rawTxt);
     
     const acc = rawTxt.split("")
@@ -405,15 +439,17 @@ function activate(context) {
                         , vEditor.edit(eb => eb.insert(new vscode.Position(0, 0), headTxt))
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
-                 .then(_ => realEditor.edit(eb => eb.replace( [_sl,s_l,sl_].reduce((p,c) => p.union(c))
-                                                            , vEditor.lines.join("\n")
-                                                            )))
                  .then(_ => {
-                         const finalLines = vEditor.lines,
+                         const finalLines = reattachComments(vEditor.lines, commentsMap),
                                endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
-                         realEditor.selection = new vscode.Selection(newPos, newPos);
+                         return realEditor.edit(eb => eb.replace( [_sl,s_l,sl_].reduce((p,c) => p.union(c))
+                                                                , finalLines.join("\n")
+                                                                ))
+                                          .then(_ => {
+                                                  realEditor.selection = new vscode.Selection(newPos, newPos);
+                                                });
                        })
                  .catch(err => console.error("CommaFirst Logic Error:", err));
   }
