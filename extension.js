@@ -215,7 +215,7 @@ function activate(context) {
                                                                                                                      : cnt--
                                                                                                        )
                                                                                                      : void 0
-                                               : cnt--
+                                               : (mod !== ";" || blk === 0) && cnt--
                                  :
         UPSTR.includes(txt[pch]) ? mod === "t" ? ( pos = new vscode.Position(pln,pch)
                                                  , tps = pos
