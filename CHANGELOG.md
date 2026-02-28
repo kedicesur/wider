@@ -475,3 +475,14 @@ Date:   Wed Feb 25 22:56:24 2026 +0300
          be careful using this functionality if
          comments are involved.
     ver : 0.4.10
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Fri Feb 27 20:08:53 2026 +0300
+
+    fix: At indexOfIndent make counter decrement
+         conditional on mode not being a semicolon or
+         block being zero to make allignDeclaration
+         function to work with function expressions
+         with braces. Now declaration allignment
+         works with complex function expressions.
+    ver: v0.4.11
