@@ -357,34 +357,73 @@ function activate(context) {
 
   function extractComments(txt) {
     const commentsMap = new Map(),
-          rawTxt      = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
-                                   , (_match, code, comment) => {
-                                        const trimmed = code.trim();
-                                        if (trimmed !== '') {
-                                          const key = trimmed.replace(/[\s,;]+/g, '');
-                                          !commentsMap.has(key) && commentsMap.set(key, []);
-                                          commentsMap.get(key)
-                                                     .push(" " + comment.trim());
-                                        }
-                                        return code;
-                                      }
-                                   );
-    return { rawTxt, commentsMap };
+          standaloneComments = [];
+    
+    // First pass: find standalone comments and associate them with the next code line
+    const lines = txt.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const standaloneMatch = lines[i].match(/^\s*(\/\/.*)$/);
+      if (standaloneMatch) {
+        // Find the next non-comment, non-empty line
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j].trim();
+          if (nextLine !== '' && !/^\s*\/\//.test(lines[j])) {
+            // Remove inline comments before computing the key
+            const codeOnly = nextLine.replace(/(?<![:\/])\/\/.*$/, '').trim();
+            const key = codeOnly.replace(/[\s,;]+/g, '');
+            standaloneComments.push({ key, comment: standaloneMatch[1].trim() });
+            break;
+          }
+        }
+      }
+    }
+    
+    const rawTxt = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
+                              , (_match, code, comment) => {
+                                    const trimmed = code.trim();
+                                    if (trimmed !== '') {
+                                      const key = trimmed.replace(/[\s,;]+/g, '');
+                                      !commentsMap.has(key) && commentsMap.set(key, []);
+                                      commentsMap.get(key)
+                                                 .push(" " + comment.trim());
+                                    }
+                                    return code;
+                                  }
+                              );
+    return { rawTxt, commentsMap, standaloneComments };
   }
 
-  function reattachComments(lines, commentsMap) {
+  function reattachComments(lines, commentsMap, standaloneComments) {
+    // Build a map of standalone comments by their target key
+    const standaloneByTarget = new Map();
+    for (const sc of standaloneComments) {
+      if (!standaloneByTarget.has(sc.key)) {
+        standaloneByTarget.set(sc.key, []);
+      }
+      standaloneByTarget.get(sc.key).push(sc.comment);
+    }
+    
     return lines.map(line => {
-                       const trimmed = line.trim();
-                       if (trimmed !== '') {
-                         const key = trimmed.replace(/[\s,;]+/g, '');
-                         for (const [storedKey, comments] of commentsMap) {
-                           if (comments.length > 0 && key.includes(storedKey)) {
-                             line += comments.shift();
-                           }
-                         }
-                       }
-                       return line;
-                     });
+                      const trimmed = line.trim();
+                      if (trimmed !== '') {
+                        const key = trimmed.replace(/[\s,;]+/g, '');
+                        
+                        // First, attach standalone comments that belong to this line
+                        if (standaloneByTarget.has(key)) {
+                          const comments = standaloneByTarget.get(key);
+                          const indent = line.match(/^(\s*)/)[1];
+                          line = comments.map(c => indent + c).join('\n') + "\n" + line;
+                        }
+                        
+                        // Then attach inline comments as before
+                        for (const [storedKey, comments] of commentsMap) {
+                          if (comments.length > 0 && key.includes(storedKey)) {
+                            line += comments.shift();
+                          }
+                        }
+                      }
+                      return line;
+                    });
   }
 
   // Unified helper function for formatting selected text for comma first and ternary
@@ -399,7 +438,7 @@ function activate(context) {
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
 
-    const { rawTxt, commentsMap } = extractComments(fullTxt);
+    const { rawTxt, commentsMap, standaloneComments } = extractComments(fullTxt);
     const sup = suppressIrrelevantCharacters(rawTxt);
 
     // 2. Tokenize (Mofied and Simplified)
@@ -456,7 +495,7 @@ function activate(context) {
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
                  .then(_ => {
-                         const finalLines = reattachComments(vEditor.lines, commentsMap),
+                         const finalLines = reattachComments(vEditor.lines, commentsMap, standaloneComments),
                                endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
