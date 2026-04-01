@@ -486,3 +486,15 @@ Date:   Fri Feb 27 20:08:53 2026 +0300
          with braces. Now declaration allignment
          works with complex function expressions.
     ver: v0.4.11
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Wed Apr 1 02:43:39 2026 +0300
+
+    fix: update regex in suppressIrrelevantCharacters
+         to distinguish regex from "/" division
+         operator characters even if there are two
+         of them in a row.
+         enhance comment extraction and reattachment
+         support for standalone comments logic in
+         Selection to Comma First
+    ver: v0.4.12
