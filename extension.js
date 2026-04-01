@@ -133,7 +133,7 @@ function activate(context) {
   }
 
   function suppressIrrelevantCharacters(str){
-    return str.replace( /(?<=[\s\(\[\{,;:=!&|?^\/])\/(?:\\.|[^\\\/\n])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
+    return str.replace( /(?<=[\s\(\[\{,;:=!&|?^\/])\/(?![ \t]+[\da-zA-Z_$])(?:\\.|[^\\\/\n])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
                       , match => "_".repeat(match.length)
                       );
   }
