@@ -498,3 +498,13 @@ Date:   Wed Apr 1 02:43:39 2026 +0300
          support for standalone comments logic in
          Selection to Comma First
     ver: v0.4.12
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Tue Nov 10 14:28:30 2026 +0300
+
+    fix: refactor isDontCare function to utilize
+         suppressIrrelevantCharacters for improved
+         logic. which also fixes the misjudgement of
+         two non-consecutive division operators ("/")
+         as start of line comment.
+    ver: v0.4.13
