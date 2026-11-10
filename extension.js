@@ -250,8 +250,8 @@ function activate(context) {
   }
 
   function isDontCare(txt, pos){
-    const mcs = [...txt.matchAll(/\/(?:\\.|[^\\\/])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm)];
-    return mcs.some(m => pos.character > m.index && pos.character < m.index + m[0].length);
+    const sup = suppressIrrelevantCharacters(txt);
+    return sup[pos.character] === "_" && txt[pos.character] !== "_";
   }
 
   function isDeletion(chg){
