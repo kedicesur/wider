@@ -251,7 +251,11 @@ function activate(context) {
                                          : [-1, false, false]
                               : 
                   dix >= 0    ? [-1, new vscode.Position(pln,dix), false]
-                              : [pch, false, txt[pch+1] === " "]
+                              : [ pch
+                                , false
+                                , txt[ pch+1]=== " "
+                                , txt.slice(0, pch).replace( /[^\t]/g, " ") // keep tabs so the indent renders at the opener's column for any tab size
+                                ]
                 : [-1, false, false];
   }
 
@@ -535,7 +539,8 @@ function activate(context) {
     let act = true,
         nix = -1,
         ofs = -1,
-        dps;
+        dps,
+        ind;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
@@ -563,21 +568,21 @@ function activate(context) {
                                                                   : Promise.resolve()
                                                        )
                                                      :
-                                     chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
-                                                                                     : [-1, -1, false]
+                                     chgtxt === ","  ? ( [nix, dps, act, ind] = cflActive ? indexOfIndent(txt,pos)
+                                                                                            : [-1, -1, false]
                                                        , nix >= 0 &&
                                                          act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
                                                                                                                  , eb.insert(pos.translate(0, 1), " ")
-                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 , eb.insert(pos, "\n" + ind)
                                                                                                                  , ofs = offsetOfRightPair(txt,pos)
                                                                                                                  , ofs >= 0 && eb.insert( pos.translate(0, ofs)
-                                                                                                                                        , "\n" + " ".repeat(nix)
+                                                                                                                                        , "\n" + ind
                                                                                                                                         )
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                                              : editor.edit(eb => ( freeToFix = false
                                                                                                                  , eb.insert(pos.translate(0,1), " ")
-                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 , eb.insert(pos, "\n" + ind)
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                   :
@@ -620,12 +625,12 @@ function activate(context) {
                                                                                                                   )))
                                                                             .then( _ => moveCursorTo(pos.line, nix + 1))
                                                                     )
-                                                                  : ( [nix,, act] = cflActive ? indexOfIndent(txt, pos, chgtxt)
-                                                                                              : [-1, -1, false]
+                                                                  : ( [nix,, act, ind] = cflActive ? indexOfIndent(txt, pos, chgtxt)
+                                                                                                  : [-1, -1, false]
                                                                     , nix >= 0                    &&
                                                                       act                         &&
                                                                       txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
-                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + " ".repeat( nix)))
+                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + ind))
                                                                                                              .then(_ => moveCursorTo(pos.line + 1, nix + 1))
                                                                                                      )
                                                                                                    : Promise.resolve()
