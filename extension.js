@@ -34,7 +34,8 @@ class VirtualEditor {
     // Sort edits reverse-positional (Right-to-Left, Bottom-to-Top) to prevent index drift
     edits.sort((a, b) => {
                  const pA = a.pos || a.range.start,
-                       pB = b.pos || b.range.start;
+         
+                               pB = b.pos || b.range.start;
                  return pB.compareTo(pA);
               });
 
@@ -359,75 +360,148 @@ function activate(context) {
                              ));
   }
 
-  function extractComments(txt) {
-    const commentsMap = new Map(),
-          standaloneComments = [];
-    
-    // First pass: find standalone comments and associate them with the next code line
-    const lines = txt.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const standaloneMatch = lines[i].match(/^\s*(\/\/.*)$/);
-      if (standaloneMatch) {
-        // Find the next non-comment, non-empty line
-        for (let j = i + 1; j < lines.length; j++) {
-          const nextLine = lines[j].trim();
-          if (nextLine !== '' && !/^\s*\/\//.test(lines[j])) {
-            // Remove inline comments before computing the key
-            const codeOnly = nextLine.replace(/(?<![:\/])\/\/.*$/, '').trim();
-            const key = codeOnly.replace(/[\s,;]+/g, '');
-            standaloneComments.push({ key, comment: standaloneMatch[1].trim() });
-            break;
-          }
-        }
+  function indexOfComment(txt) {
+    let q = "";
+    for (let i = 0; i < txt.length; i++) {
+      const ch = txt[i];
+      if (q) {
+        ch === "\\" ? i++
+                    : ch === q && (q = "");
       }
+      else if (ch === '"' || ch === "'" || ch === "`") q = ch;
+      else if (ch === "/" && txt[i+1] === "/") return i;
     }
-    
-    const rawTxt = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
-                              , (_match, code, comment) => {
-                                    const trimmed = code.trim();
-                                    if (trimmed !== '') {
-                                      const key = trimmed.replace(/[\s,;]+/g, '');
-                                      !commentsMap.has(key) && commentsMap.set(key, []);
-                                      commentsMap.get(key)
-                                                 .push(" " + comment.trim());
-                                    }
-                                    return code;
-                                  }
-                              );
-    return { rawTxt, commentsMap, standaloneComments };
+    return -1;
   }
 
-  function reattachComments(lines, commentsMap, standaloneComments) {
-    // Build a map of standalone comments by their target key
-    const standaloneByTarget = new Map();
-    for (const sc of standaloneComments) {
-      if (!standaloneByTarget.has(sc.key)) {
-        standaloneByTarget.set(sc.key, []);
-      }
-      standaloneByTarget.get(sc.key).push(sc.comment);
+  // Replaces comments with spaces so that character offsets match the original text
+  function extractComments(txt) {
+    const comments = [],
+          raw      = [];
+    let offset = 0;
+
+    for (const line of txt.split("\n")) {
+      const ix = indexOfComment(line);
+      ix < 0 ? raw.push(line)
+             : ( comments.push({ offset: offset + ix
+                               , text: line.slice(ix).trim()
+                               , standalone: line.slice(0, ix).trim() === ""
+                               })
+               , raw.push(line.slice(0, ix) + " ".repeat(line.length - ix))
+               );
+      offset += line.length + 1;
     }
-    
-    return lines.map(line => {
-                      const trimmed = line.trim();
-                      if (trimmed !== '') {
-                        const key = trimmed.replace(/[\s,;]+/g, '');
-                        
-                        // First, attach standalone comments that belong to this line
-                        if (standaloneByTarget.has(key)) {
-                          const comments = standaloneByTarget.get(key);
-                          const indent = line.match(/^(\s*)/)[1];
-                          line = comments.map(c => indent + c).join('\n') + "\n" + line;
+    return { rawTxt: raw.join("\n"), comments };
+  }
+
+  // Comments are re-attached by the count of non-whitespace characters preceding them,
+  // which the formatter preserves, rather than by the text of a neighbouring line.
+  function reattachComments(lines, rawTxt, comments, headCount) {
+    if (!comments.length) return lines;
+
+    const text    = lines.join("\n"),
+          norm    = [],
+          edits   = [],
+          inlines = [],
+          groups  = [];
+
+    for (let i = 0; i < text.length; i++) /\S/.test(text[i]) && norm.push(i);
+
+    const lstart = i => text.lastIndexOf("\n", i - 1) + 1,
+          lend   = i => { const j = text.indexOf("\n", i); return j < 0 ? text.length : j; },
+          nextNw = i => { while (i < text.length && !/\S/.test(text[i])) i++; return i; },
+          leadWs = i => text.slice(lstart(i), i).match(/^\s*/)[0],
+          // column of the bracket matching the closing bracket at i
+          openerCol = i => {
+                        const close = text[i],
+                              open  = { "}": "{", "]": "[", ")": "(" }[close];
+                        if (!open) return -1;
+                        for (let d = 0, j = i; j >= 0; j--) {
+                          if (text[j] === close) d++;
+                          else if (text[j] === open && --d === 0) return j - lstart(j);
                         }
-                        
-                        // Then attach inline comments as before
-                        for (const [storedKey, comments] of commentsMap) {
-                          if (comments.length > 0 && key.includes(storedKey)) {
-                            line += comments.shift();
-                          }
-                        }
-                      }
-                      return line;
+                        return -1;
+                      },
+          // indent for code that follows a comment inserted into the middle of a line
+          contInd = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? " ".repeat(openerCol(nxt))
+                                                                                  : " ".repeat(nxt - lstart(at));
+
+    let cix = 0,
+        cnt = 0;
+    for (let i = 0; i < rawTxt.length && cix < comments.length; i++) {
+      while (cix < comments.length && comments[cix].offset <= i) comments[cix++].count = cnt;
+      /\S/.test(rawTxt[i]) && cnt++;
+    }
+    while (cix < comments.length) comments[cix++].count = cnt;
+
+    const addGroup = (at, to, ind, pre, post, txt) => {
+      const grp = groups[groups.length - 1];
+      grp && grp.at === at &&
+      grp.to === to        &&
+      grp.ind === ind      &&
+      grp.pre === pre      &&
+      grp.post === post     ? grp.texts.push(txt) 
+                            : groups.push({ at, to, ind, pre, post, texts: [txt] });
+    };
+
+    for (const c of comments) {
+      const idx  = Math.min(c.count + headCount, norm.length) - 1,
+            last = idx >= 0 ? norm[idx] : -1;
+
+      if (c.standalone) {
+        const at  = last + 1,
+              nxt = nextNw(at);
+
+        nxt === text.length ? addGroup( at, at, leadWs(at)
+                                      , at > 0 && text[at-1] !== "\n" ? "\n" : "", ""
+                                      , c.text
+                                      )
+                            :
+        nxt > lend(at)      ? addGroup( lstart(nxt), lstart(nxt), text.slice(lstart(nxt), nxt)
+                                      , "", "\n"
+                                      , c.text
+                                      )
+                            : addGroup( at, nxt
+                                      , at === lstart(at) ? text.slice(at, nxt) : contInd(at, nxt)
+                                      , at === lstart(at) ? "" : "\n"
+                                      , "\n" + (at === lstart(at) ? text.slice(at, nxt) : contInd(at, nxt))
+                                      , c.text
+                                      );
+      }
+      else {
+        let at = last + 1;
+        // A trailing comma/semicolon moved to the next line must stay after the comment
+        if (last >= 0 && ",;".includes(text[last]) && /^\s*$/.test(text.slice(lstart(last), last))) {
+          let p = last - 1;
+          while (p >= 0 && /\s/.test(text[p])) p--;
+          at = p + 1;
+        }
+        const nxt = nextNw(at),
+              add = nxt < text.length && nxt <= lend(at);
+        inlines.push({ at, to: add ? nxt : at
+                     , base: " " + c.text
+                     , text: " " + c.text + (add ? "\n" + contInd(at, nxt) : "")
+                     });
+      }
+    }
+
+    groups.forEach(g => edits.push({ at: g.at
+                                   , to: g.to
+                                   , pre: g.pre
+                                   , text: g.pre + g.texts.map(t => g.ind + t).join("\n") + g.post
+                                   }));
+
+    // An inline comment and a standalone comment may share the same insertion point
+    inlines.forEach(e => {
+                      const grp = edits.find(g => g.pre !== void 0 && g.at === e.at && g.to === e.to);
+                      grp ? grp.text = e.base + "\n" + grp.text.slice(grp.pre.length)
+                          : edits.push(e);
                     });
+
+    let out = text;
+    edits.sort((a,b) => b.at - a.at || b.to - a.to)
+         .forEach(e => out = out.slice(0, e.at) + e.text + out.slice(e.to));
+    return out.split("\n");
   }
 
   // Unified helper function for formatting selected text for comma first and ternary
@@ -442,7 +516,7 @@ function activate(context) {
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
 
-    const { rawTxt, commentsMap, standaloneComments } = extractComments(fullTxt);
+    const { rawTxt, comments } = extractComments(fullTxt);
     const sup = suppressIrrelevantCharacters(rawTxt);
 
     // 2. Tokenize (Mofied and Simplified)
@@ -499,7 +573,7 @@ function activate(context) {
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
                  .then(_ => {
-                         const finalLines = reattachComments(vEditor.lines, commentsMap, standaloneComments),
+                         const finalLines = reattachComments(vEditor.lines, rawTxt, comments, headTxt.replace(/\s/g, "").length),
                                endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
@@ -626,7 +700,7 @@ function activate(context) {
                                                                             .then( _ => moveCursorTo(pos.line, nix + 1))
                                                                     )
                                                                   : ( [nix,, act, ind] = cflActive ? indexOfIndent(txt, pos, chgtxt)
-                                                                                                  : [-1, -1, false]
+                                                                                                   : [-1, -1, false]
                                                                     , nix >= 0                    &&
                                                                       act                         &&
                                                                       txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
