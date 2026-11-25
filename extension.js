@@ -205,7 +205,8 @@ function activate(context) {
         cnt = 1,
         blk = 0,
         tps,
-        dix;
+        dix,
+        nix;
 
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
@@ -246,7 +247,14 @@ function activate(context) {
                       );
     }
     return !cnt ? mod === "." ? /[\])]$/.test(txt.slice(0,pch)) ? indexOfIndent(txt.slice(0,pch+1), new vscode.Position(pln,pch-1), ".")
-                                                                : [getPreviousMethodIndex(txt.slice(0,pch)), false, false] // send the slice of the line text coming before "(" to get previous method's index or -1
+                                                                : ( nix = getPreviousMethodIndex(txt.slice(0,pch)) // send the slice of the line text coming before "(" to get previous method's index or -1
+                                                                  , [ nix
+                                                                    , false
+                                                                    , false
+                                                                    , nix >= 0 ? txt.slice(0,nix).replace( /[^\t]/g, " ")
+                                                                               : "" // keep tabs so the indent renders at the dot's column for any tab size
+                                                                    ]
+                                                                  )
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
@@ -701,9 +709,9 @@ function activate(context) {
                                                        )
                                                      :
                                      chgtxt === "."  ? smcActive          &&
-                                                ")]".includes(txt[pix-1]) ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
+                                                ")]".includes(txt[pix-1]) ? ( [nix,,,ind] = indexOfIndent(txt, pos.translate(0,-1), ".")
                                                                             , nix >= 0 && editor.edit(eb => ( freeToFix = false
-                                                                                                            , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                            , eb.insert(pos, "\n" + ind)
                                                                                                             ))
                                                                             )
                                                                           : Promise.resolve()
