@@ -336,10 +336,32 @@ function activate(context) {
 
   function alignDeclaration(dps, pos, lst){ // THIS NEEDS TO BE FIXED AS DECLARATIONS IN FUNCTION DECLARATIONS EFFECT THE INDENTING
     let lvi;
-    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
-    const lns = editor.document.getText(sel)
-                               .split(/\n+/);
-    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|const\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
+    const sel     = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1)),
+          lns     = editor.document.getText(sel)
+                                   .split(/\n+/),
+          pattern = /(?<=(?:let\s+|var\s+|const\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/,
+          src     = lns.join("\n"),
+          sup     = suppressIrrelevantCharacters(src),
+          ixs     = lns.map(l => l.search(pattern));
+    let baseDepth;
+    const stack = [],
+          closeFor = { ")": "(", "]": "[", "}": "{" };
+
+    for (let i = 0, offset = 0, line = 0; i < src.length; i++) {
+      if (i === dps.character) baseDepth = stack.length;
+      const ix = ixs[line];
+      if (ix >= 0) {
+        const eq = offset + lns[line].indexOf("=", ix);
+        if (i === eq && (stack.length !== baseDepth || sup[i] !== "=")) ixs[line] = -1;
+      }
+      if (i === offset + lns[line].length) {
+        offset += lns[line].length + 1;
+        line++;
+      }
+      const ch = sup[i];
+      if ("([{".includes(ch)) stack.push(ch);
+      else if (closeFor[ch] && stack[stack.length - 1] === closeFor[ch]) stack.pop();
+    }
     const max = Math.max(...ixs);
     const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
                                                      : s.l += " ".repeat(s.d) + l + "\n"
@@ -407,24 +429,32 @@ function activate(context) {
 
     for (let i = 0; i < text.length; i++) /\S/.test(text[i]) && norm.push(i);
 
-    const lstart = i => text.lastIndexOf("\n", i - 1) + 1,
-          lend   = i => { const j = text.indexOf("\n", i); return j < 0 ? text.length : j; },
-          nextNw = i => { while (i < text.length && !/\S/.test(text[i])) i++; return i; },
-          leadWs = i => text.slice(lstart(i), i).match(/^\s*/)[0],
-          // column of the bracket matching the closing bracket at i
-          openerCol = i => {
+    const lstart                    = i => text.lastIndexOf("\n", i - 1) + 1,
+          lend                      = i => {
+                     const j        = text.indexOf("\n", i);
+                            return j < 0 ? text.length
+                                         : j;
+                          },
+          nextNw                    = i => {
+                                        while (i < text.length && !/\S/.test(text[i])) i++;
+                                        return i;
+                                     },
+          leadWs                    = i => text.slice(lstart(i), i).match(/^\s*/)[0],
+                             // column of the bracket matching the closing bracket at i
+          openerCol                 = i => {
                         const close = text[i],
                               open  = { "}": "{", "]": "[", ")": "(" }[close];
                         if (!open) return -1;
-                        for (let d = 0, j = i; j >= 0; j--) {
-                          if (text[j] === close) d++;
-                          else if (text[j] === open && --d === 0) return j - lstart(j);
-                        }
-                        return -1;
-                      },
-          // indent for code that follows a comment inserted into the middle of a line
-          contInd = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? " ".repeat(openerCol(nxt))
-                                                                                  : " ".repeat(nxt - lstart(at));
+                        for (let d  = 0, j = i; j >= 0; j--) {
+                           if (text[j] === close) d++;
+                           else if (text[j] === open && --d === 0) return j - lstart(j);
+                         }
+                         return -1;
+                       },
+           // indent for code that follows a comment inserted into the middle of a line
+          contInd                   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? " ".repeat(openerCol(nxt))
+                                                                                                    : " ".repeat(nxt - lstart(at));
+    
 
     let cix = 0,
         cnt = 0;
