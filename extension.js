@@ -370,21 +370,30 @@ function activate(context) {
       if ("([{".includes(ch)) stack.push(ch);
       else if (closeFor[ch] && stack[stack.length - 1] === closeFor[ch]) stack.pop();
     }
-    const max = Math.max(...ixs);
-    const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
-                                                     : s.l += " ".repeat(s.d) + l + "\n"
-                                       , s
-                                       )
-                          , { l: ""
-                            , d: 0
-                            }
-                          )
-                   .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
-                                                      .text.search(/\b(?:let|var|const)\b/)
-                               , lvi > 0 ? " ".repeat(lvi)
-                                         : ""
-                               )
-                             : " ".repeat(dps.character));
+    const configuredTabSize = editor.options?.tabSize ?? config.get("tabSize"),
+          tabSize           = Number.isInteger(configuredTabSize) && configuredTabSize > 0 ? configuredTabSize : 4,
+          cols              = ixs.map((ix,i) => {
+                                        if (ix < 0) return ix;
+                                        let col = 0;
+                                        for (let j = 0; j < ix; j++) col += lns[i][j] === "\t" ? tabSize - col % tabSize : 1;
+                                        return col;
+                                      }),
+          max               = Math.max(...cols),
+          txt               = lns.reduce((s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - cols[i]) + l.substring(ixs[i]) + "\n"
+                                                                  : s.l += " ".repeat(s.d) + l + "\n"
+                                                    , s
+                                                    )
+                                        , { l: ""
+                                          , d: 0
+                                          }
+                                        )
+                                 .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
+                                                                    .text.search(/\b(?:let|var|const)\b/)
+                                             , lvi > 0 ? " ".repeat(lvi)
+                                                       : ""
+                                             )
+                                           : " ".repeat(dps.character));
+    
     return editor.edit(eb => ( freeToFix = false
                              , eb.replace(sel,txt)
                              ));
