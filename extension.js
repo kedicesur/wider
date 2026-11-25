@@ -133,6 +133,26 @@ function activate(context) {
                                  );
   }
 
+  function getTabSize(){
+    const configuredTabSize = editor.options?.tabSize ?? config.get("tabSize");
+    return Number.isInteger(configuredTabSize) && configuredTabSize > 0 ? configuredTabSize : 4;
+  }
+
+  function visualColumn(txt, end = txt.length){
+    const tabSize = getTabSize();
+    let col = 0;
+    for (let i = 0; i < end; i++) col += txt[i] === "\t" ? tabSize - col % tabSize : 1;
+    return col;
+  }
+
+  function indentationForColumn(column){
+    return " ".repeat(Math.max(0, column));
+  }
+
+  function indentationAt(txt, end = txt.length){
+    return indentationForColumn(visualColumn(txt, end));
+  }
+
   function suppressIrrelevantCharacters(str){
     return str.replace( /(?<=[\s\(\[\{,;:=!&|?^\/])\/(?![ \t]+[\da-zA-Z_$])(?:\\.|[^\\\/\n])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
                       , match => "_".repeat(match.length)
@@ -251,8 +271,8 @@ function activate(context) {
                                                                   , [ nix
                                                                     , false
                                                                     , false
-                                                                    , nix >= 0 ? txt.slice(0,nix).replace( /[^\t]/g, " ")
-                                                                               : "" // keep tabs so the indent renders at the dot's column for any tab size
+                                                                    , nix >= 0 ? indentationAt(txt, nix)
+                                                                               : ""
                                                                     ]
                                                                   )
                               :
@@ -263,7 +283,7 @@ function activate(context) {
                               : [ pch
                                 , false
                                 , txt[ pch+1]=== " "
-                                , txt.slice(0, pch).replace( /[^\t]/g, " ") // keep tabs so the indent renders at the opener's column for any tab size
+                                , indentationAt(txt, pch)
                                 ]
                 : [-1, false, false];
   }
@@ -370,17 +390,10 @@ function activate(context) {
       if ("([{".includes(ch)) stack.push(ch);
       else if (closeFor[ch] && stack[stack.length - 1] === closeFor[ch]) stack.pop();
     }
-    const configuredTabSize = editor.options?.tabSize ?? config.get("tabSize"),
-          tabSize           = Number.isInteger(configuredTabSize) && configuredTabSize > 0 ? configuredTabSize : 4,
-          cols              = ixs.map((ix,i) => {
-                                        if (ix < 0) return ix;
-                                        let col = 0;
-                                        for (let j = 0; j < ix; j++) col += lns[i][j] === "\t" ? tabSize - col % tabSize : 1;
-                                        return col;
-                                      }),
+    const cols = ixs.map((ix,i) => ix < 0 ? ix : visualColumn(lns[i], ix)),
           max               = Math.max(...cols),
-          txt               = lns.reduce((s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - cols[i]) + l.substring(ixs[i]) + "\n"
-                                                                  : s.l += " ".repeat(s.d) + l + "\n"
+          txt               = lns.reduce((s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + indentationForColumn(s.d = max - cols[i]) + l.substring(ixs[i]) + "\n"
+                                                                  : s.l += indentationForColumn(s.d) + l + "\n"
                                                     , s
                                                     )
                                         , { l: ""
@@ -389,10 +402,10 @@ function activate(context) {
                                         )
                                  .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
                                                                     .text.search(/\b(?:let|var|const)\b/)
-                                             , lvi > 0 ? " ".repeat(lvi)
+                                             , lvi > 0 ? indentationAt(editor.document.lineAt(dps.line).text, lvi)
                                                        : ""
                                              )
-                                           : " ".repeat(dps.character));
+                                           : indentationAt(editor.document.lineAt(dps.line).text, dps.character));
     
     return editor.edit(eb => ( freeToFix = false
                              , eb.replace(sel,txt)
@@ -464,13 +477,13 @@ function activate(context) {
                         if (!open) return -1;
                         for (let d  = 0, j = i; j >= 0; j--) {
                            if (text[j] === close) d++;
-                           else if (text[j] === open && --d === 0) return j - lstart(j);
+                           else if (text[j] === open && --d === 0) return visualColumn(text.slice(lstart(j), j));
                          }
                          return -1;
                        },
            // indent for code that follows a comment inserted into the middle of a line
-          contInd                   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? " ".repeat(openerCol(nxt))
-                                                                                                    : " ".repeat(nxt - lstart(at));
+          contInd                   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? indentationForColumn(openerCol(nxt))
+                                                                                                    : indentationAt(text.slice(lstart(at), nxt));
     
 
     let cix = 0,
@@ -661,14 +674,16 @@ function activate(context) {
         nix = -1,
         ofs = -1,
         dps,
+        tps,
         ind;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
-                                     tefActive       ? ( nix = isTernaryColon(pos)?.character ?? -1
+                                     tefActive       ? ( tps = isTernaryColon(pos)
+                                                       , nix = tps?.character ?? -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                  , "\n" + " ".repeat(nix) + ": "
+                                                                                                  , "\n" + indentationAt(editor.document.lineAt(tps.line).text, tps.character) + ": "
                                                                                                   )
                                                                                       ))
                                                                   : Promise.resolve()
@@ -683,7 +698,7 @@ function activate(context) {
                                                                                                  , " "
                                                                                                  )
                                                                                       , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                 , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                 , "\n" + indentationForColumn(2 * visualColumn(txt, nix) + 1 - visualColumn(txt, pix))
                                                                                                  )
                                                                                       ))
                                                                   : Promise.resolve()
@@ -730,7 +745,7 @@ function activate(context) {
                                                                          : -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.insert( pos.translate(0,1)
-                                                                                                 , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
+                                                                                                 , "\n" + indentationForColumn(visualColumn(txt, nix) + 2) + "\n" + indentationAt(txt, nix)
                                                                                                  )
                                                                                       ))
                                                                           .then(_ => moveCursorTo(pos.line + 1, nix + 2))
