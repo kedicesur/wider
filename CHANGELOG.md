@@ -531,9 +531,14 @@ Date:   Tue Nov 10 14:46:24 2026 +0300
          function by adjusting position calculations for
          ternary formatting
     ver: v0.4.14
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Wed Nov 25 21:29:08 2026 +0300
 
-
-
-
+   fix: enhance indentation handling by implementing
+        dynamic tab size and improving visual column
+        calculations.
+        version bump to publish proper master branch.
+   ver: v0.4.15
 
 
