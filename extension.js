@@ -675,14 +675,19 @@ function activate(context) {
         ofs = -1,
         dps,
         tps,
-        ind;
+        ind,
+        cps;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
-                                     tefActive       ? ( tps = isTernaryColon(pos)
+                                     tefActive       ? ( // formatSelection replays a ":" token padded with a trailing space,
+                                                         // so pos may point at that space instead of the colon itself
+                                                         cps = txt[pix] === ":" ? pos
+                                                                                : pos.translate(0, txt.slice(0, pix + 1).trimEnd().length - pix - 1)
+                                                       , tps = isTernaryColon(pos)
                                                        , nix = tps?.character ?? -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                      , eb.replace( new vscode.Range(pos,pos.translate(0,1))
+                                                                                      , eb.replace( new vscode.Range(cps,pos.translate(0,1))
                                                                                                   , "\n" + indentationAt(editor.document.lineAt(tps.line).text, tps.character) + ": "
                                                                                                   )
                                                                                       ))
