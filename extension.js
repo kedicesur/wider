@@ -459,19 +459,19 @@ function activate(context) {
 
     for (let i = 0; i < text.length; i++) /\S/.test(text[i]) && norm.push(i);
 
-    const lstart                    = i => text.lastIndexOf("\n", i - 1) + 1,
-          lend                      = i => {
-                     const j        = text.indexOf("\n", i);
-                            return j < 0 ? text.length
-                                         : j;
-                          },
-          nextNw                    = i => {
-                                        while (i < text.length && !/\S/.test(text[i])) i++;
-                                        return i;
-                                     },
-          leadWs                    = i => text.slice(lstart(i), i).match(/^\s*/)[0],
-                             // column of the bracket matching the closing bracket at i
-          openerCol                 = i => {
+    const lstart    = i => text.lastIndexOf("\n", i - 1) + 1,
+          lend      = i => {
+                        const j = text.indexOf("\n", i);
+                        return j < 0 ? text.length
+                                    : j;
+                      },
+          nextNw    = i => {
+                        while (i < text.length && !/\S/.test(text[i])) i++;
+                        return i;
+                      },
+          leadWs    = i => text.slice(lstart(i), i).match(/^\s*/)[0],
+                                // column of the bracket matching the closing bracket at i
+          openerCol = i => {
                         const close = text[i],
                               open  = { "}": "{", "]": "[", ")": "(" }[close];
                         if (!open) return -1;
@@ -480,12 +480,11 @@ function activate(context) {
                            else if (text[j] === open && --d === 0) return visualColumn(text.slice(lstart(j), j));
                          }
                          return -1;
-                       },
+                      },
            // indent for code that follows a comment inserted into the middle of a line
-          contInd                   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? indentationForColumn(openerCol(nxt))
-                                                                                                    : indentationAt(text.slice(lstart(at), nxt));
+          contInd   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? indentationForColumn(openerCol(nxt))
+                                                                                    : indentationAt(text.slice(lstart(at), nxt));
     
-
     let cix = 0,
         cnt = 0;
     for (let i = 0; i < rawTxt.length && cix < comments.length; i++) {
