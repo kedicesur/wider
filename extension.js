@@ -719,12 +719,12 @@ function activate(context) {
                                                                                                                                         , "\n" + ind
                                                                                                                                         )
                                                                                                                  ))
-                                                                                                     .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                                     .then(_ => moveCursorTo(pos.line + 1, ind.length + 2))
                                                                                              : editor.edit(eb => ( freeToFix = false
                                                                                                                  , eb.insert(pos.translate(0,1), " ")
                                                                                                                  , eb.insert(pos, "\n" + ind)
                                                                                                                  ))
-                                                                                                     .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                                                     .then(_ => moveCursorTo(pos.line + 1, ind.length + 2))
                                                                   :
                                                           dps     ? alignDeclaration(dps, pos, false)
                                                                   : Promise.resolve()
@@ -752,7 +752,7 @@ function activate(context) {
                                                                                                  , "\n" + indentationForColumn(visualColumn(txt, nix) + 2) + "\n" + indentationAt(txt, nix)
                                                                                                  )
                                                                                       ))
-                                                                          .then(_ => moveCursorTo(pos.line + 1, nix + 2))
+                                                                          .then(_ => moveCursorTo(pos.line + 1, visualColumn(txt, nix) + 2))
                                                                  : Promise.resolve()
                                                        )
                                                       :
@@ -771,7 +771,7 @@ function activate(context) {
                                                                       act                         &&
                                                                       txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
                                                                                                      , editor.edit(eb => eb.insert(pos, "\n" + ind))
-                                                                                                             .then(_ => moveCursorTo(pos.line + 1, nix + 1))
+                                                                                                             .then(_ => moveCursorTo(pos.line + 1, ind.length + 1))
                                                                                                      )
                                                                                                    : Promise.resolve()
                                                                     )
