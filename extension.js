@@ -32,7 +32,8 @@ class VirtualEditor {
     
     edits.sort((a, b) => {
                  const pA = a.pos || a.range.start,
-                       pB = b.pos || b.range.start;
+         
+                               pB = b.pos || b.range.start;
                  return pB.compareTo(pA);
               });
 
@@ -129,6 +130,26 @@ function activate(context) {
                                  );
   }
 
+  function getTabSize(){
+    const configuredTabSize = editor.options?.tabSize ?? config.get("tabSize");
+    return Number.isInteger(configuredTabSize) && configuredTabSize > 0 ? configuredTabSize : 4;
+  }
+
+  function visualColumn(txt, end = txt.length){
+    const tabSize = getTabSize();
+    let col = 0;
+    for (let i = 0; i < end; i++) col += txt[i] === "\t" ? tabSize - col % tabSize : 1;
+    return col;
+  }
+
+  function indentationForColumn(column){
+    return " ".repeat(Math.max(0, column));
+  }
+
+  function indentationAt(txt, end = txt.length){
+    return indentationForColumn(visualColumn(txt, end));
+  }
+
   function suppressIrrelevantCharacters(str){
     return str.replace( /(?<=[\s\(\[\{,;:=!&|?^\/])\/(?![ \t]+[\da-zA-Z_$])(?:\\.|[^\\\/\n])+\/[gimuy]{0,5}|(['"`])(?:\\.|(?!\1)[\s\S])*?\1|(?<![:\/])\/\/.*$/gm
                       , match => "_".repeat(match.length)
@@ -198,7 +219,8 @@ function activate(context) {
         cnt = 1,
         blk = 0,
         tps,
-        dix;
+        dix,
+        nix;
 
     while(cnt && pln >= 0){
       txt = suppressIrrelevantCharacters(txt);
@@ -239,13 +261,24 @@ function activate(context) {
                       );
     }
     return !cnt ? mod === "." ? /[\])]$/.test(txt.slice(0,pch)) ? indexOfIndent(txt.slice(0,pch+1), new vscode.Position(pln,pch-1), ".")
-                                                                : [getPreviousMethodIndex(txt.slice(0,pch)), false, false]
+                                                                : ( nix = getPreviousMethodIndex(txt.slice(0,pch))
+                                                                  , [ nix
+                                                                    , false
+                                                                    , false
+                                                                    , nix >= 0 ? indentationAt(txt, nix)
+                                                                               : ""
+                                                                    ]
+                                                                  )
                               :
                   mod === ";" ? dix >= 0 ? [-1, new vscode.Position(pln,dix), false]
                                          : [-1, false, false]
                               : 
                   dix >= 0    ? [-1, new vscode.Position(pln,dix), false]
-                              : [pch, false, txt[pch+1] === " "]
+                              : [ pch
+                                , false
+                                , txt[ pch+1]=== " "
+                                , indentationAt(txt, pch)
+                                ]
                 : [-1, false, false];
   }
 
@@ -319,99 +352,195 @@ function activate(context) {
 
   function alignDeclaration(dps, pos, lst){
     let lvi;
-    const sel = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1));
-    const lns = editor.document.getText(sel)
-                               .split(/\n+/);
-    const ixs = lns.map(l => l.search(/(?<=(?:let\s+|var\s+|const\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/));
-    const max = Math.max(...ixs);
-    const txt = lns.reduce( (s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + " ".repeat(s.d = max - ixs[i]) + l.substring(ixs[i]) + "\n"
-                                                     : s.l += " ".repeat(s.d) + l + "\n"
-                                       , s
-                                       )
-                          , { l: ""
-                            , d: 0
-                            }
-                          )
-                   .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
-                                                      .text.search(/\b(?:let|var|const)\b/)
-                               , lvi > 0 ? " ".repeat(lvi)
-                                         : ""
-                               )
-                             : " ".repeat(dps.character));
+    const sel     = new vscode.Selection(dps.translate(0,-dps.character),pos.translate(0,1)),
+          lns     = editor.document.getText(sel)
+                                   .split(/\n+/),
+          pattern = /(?<=(?:let\s+|var\s+|const\s+|^\s*)\${0,1}[a-zA-Z\d\-_]+\s*)=/,
+          src     = lns.join("\n"),
+          sup     = suppressIrrelevantCharacters(src),
+          ixs     = lns.map(l => l.search(pattern));
+    let baseDepth;
+    const stack = [],
+          closeFor = { ")": "(", "]": "[", "}": "{" };
+
+    for (let i = 0, offset = 0, line = 0; i < src.length; i++) {
+      if (i === dps.character) baseDepth = stack.length;
+      const ix = ixs[line];
+      if (ix >= 0) {
+        const eq = offset + lns[line].indexOf("=", ix);
+        if (i === eq && (stack.length !== baseDepth || sup[i] !== "=")) ixs[line] = -1;
+      }
+      if (i === offset + lns[line].length) {
+        offset += lns[line].length + 1;
+        line++;
+      }
+      const ch = sup[i];
+      if ("([{".includes(ch)) stack.push(ch);
+      else if (closeFor[ch] && stack[stack.length - 1] === closeFor[ch]) stack.pop();
+    }
+    const cols = ixs.map((ix,i) => ix < 0 ? ix : visualColumn(lns[i], ix)),
+          max               = Math.max(...cols),
+          txt               = lns.reduce((s,l,i) => ( ixs[i] >= 0 ? s.l += l.substring(0,ixs[i]) + indentationForColumn(s.d = max - cols[i]) + l.substring(ixs[i]) + "\n"
+                                                                  : s.l += indentationForColumn(s.d) + l + "\n"
+                                                    , s
+                                                    )
+                                        , { l: ""
+                                          , d: 0
+                                          }
+                                        )
+                                 .l + (lst ? ( lvi = editor.document.lineAt(dps.line)
+                                                                    .text.search(/\b(?:let|var|const)\b/)
+                                             , lvi > 0 ? indentationAt(editor.document.lineAt(dps.line).text, lvi)
+                                                       : ""
+                                             )
+                                           : indentationAt(editor.document.lineAt(dps.line).text, dps.character));
+    
     return editor.edit(eb => ( freeToFix = false
                              , eb.replace(sel,txt)
                              ));
   }
 
-  function extractComments(txt) {
-    const commentsMap = new Map(),
-          standaloneComments = [];
-    
-    // First pass: find standalone comments and associate them with the next code line
-    const lines = txt.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const standaloneMatch = lines[i].match(/^\s*(\/\/.*)$/);
-      if (standaloneMatch) {
-        // Find the next non-comment, non-empty line
-        for (let j = i + 1; j < lines.length; j++) {
-          const nextLine = lines[j].trim();
-          if (nextLine !== '' && !/^\s*\/\//.test(lines[j])) {
-            // Remove inline comments before computing the key
-            const codeOnly = nextLine.replace(/(?<![:\/])\/\/.*$/, '').trim();
-            const key = codeOnly.replace(/[\s,;]+/g, '');
-            standaloneComments.push({ key, comment: standaloneMatch[1].trim() });
-            break;
-          }
-        }
+  function indexOfComment(txt) {
+    let q = "";
+    for (let i = 0; i < txt.length; i++) {
+      const ch = txt[i];
+      if (q) {
+        ch === "\\" ? i++
+                    : ch === q && (q = "");
       }
+      else if (ch === '"' || ch === "'" || ch === "`") q = ch;
+      else if (ch === "/" && txt[i+1] === "/") return i;
     }
-    
-    const rawTxt = txt.replace( /^([^\n]*?)(?<![:\/])(\/\/.*)$/gm
-                              , (_match, code, comment) => {
-                                    const trimmed = code.trim();
-                                    if (trimmed !== '') {
-                                      const key = trimmed.replace(/[\s,;]+/g, '');
-                                      !commentsMap.has(key) && commentsMap.set(key, []);
-                                      commentsMap.get(key)
-                                                 .push(" " + comment.trim());
-                                    }
-                                    return code;
-                                  }
-                              );
-    return { rawTxt, commentsMap, standaloneComments };
+    return -1;
   }
+  
+  function extractComments(txt) {
+    const comments = [],
+          raw      = [];
+    let offset = 0;
 
-  function reattachComments(lines, commentsMap, standaloneComments) {
-    // Build a map of standalone comments by their target key
-    const standaloneByTarget = new Map();
-    for (const sc of standaloneComments) {
-      if (!standaloneByTarget.has(sc.key)) {
-        standaloneByTarget.set(sc.key, []);
-      }
-      standaloneByTarget.get(sc.key).push(sc.comment);
+    for (const line of txt.split("\n")) {
+      const ix = indexOfComment(line);
+      ix < 0 ? raw.push(line)
+             : ( comments.push({ offset: offset + ix
+                               , text: line.slice(ix).trim()
+                               , standalone: line.slice(0, ix).trim() === ""
+                               })
+               , raw.push(line.slice(0, ix) + " ".repeat(line.length - ix))
+               );
+      offset += line.length + 1;
     }
-    
-    return lines.map(line => {
-                      const trimmed = line.trim();
-                      if (trimmed !== '') {
-                        const key = trimmed.replace(/[\s,;]+/g, '');
-                        
-                        // First, attach standalone comments that belong to this line
-                        if (standaloneByTarget.has(key)) {
-                          const comments = standaloneByTarget.get(key);
-                          const indent = line.match(/^(\s*)/)[1];
-                          line = comments.map(c => indent + c).join('\n') + "\n" + line;
-                        }
-                        
-                        // Then attach inline comments as before
-                        for (const [storedKey, comments] of commentsMap) {
-                          if (comments.length > 0 && key.includes(storedKey)) {
-                            line += comments.shift();
+    return { rawTxt: raw.join("\n"), comments };
+  }
+  
+  function reattachComments(lines, rawTxt, comments, headCount) {
+    if (!comments.length) return lines;
+
+    const text    = lines.join("\n"),
+          norm    = [],
+          edits   = [],
+          inlines = [],
+          groups  = [];
+
+    for (let i = 0; i < text.length; i++) /\S/.test(text[i]) && norm.push(i);
+
+    const lstart    = i => text.lastIndexOf("\n", i - 1) + 1,
+          lend      = i => {
+                        const j        = text.indexOf("\n", i);
+                        return j < 0 ? text.length
+                                     : j;
+                      },
+          nextNw    = i => {
+                        while (i < text.length && !/\S/.test(text[i])) i++;
+                        return i;
+                      },
+          leadWs    = i => text.slice(lstart(i), i).match(/^\s*/)[0],
+          openerCol = i => {
+                        const close = text[i],
+                              open  = { "}": "{", "]": "[", ")": "(" }[close];
+                        if (!open) return -1;
+                        for (let d  = 0, j = i; j >= 0; j--) {
+                            if (text[j] === close) d++;
+                            else if (text[j] === open && --d === 0) return visualColumn(text.slice(lstart(j), j));
                           }
-                        }
-                      }
-                      return line;
+                          return -1;
+                      },
+          contInd   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? indentationForColumn(openerCol(nxt))
+                                                                                    : indentationAt(text.slice(lstart(at), nxt));
+    let cix = 0,
+        cnt = 0;
+    for (let i = 0; i < rawTxt.length && cix < comments.length; i++) {
+      while (cix < comments.length && comments[cix].offset <= i) comments[cix++].count = cnt;
+      /\S/.test(rawTxt[i]) && cnt++;
+    }
+    while (cix < comments.length) comments[cix++].count = cnt;
+
+    const addGroup = (at, to, ind, pre, post, txt) => {
+      const grp = groups[groups.length - 1];
+      grp && grp.at === at &&
+      grp.to === to        &&
+      grp.ind === ind      &&
+      grp.pre === pre      &&
+      grp.post === post     ? grp.texts.push(txt) 
+                            : groups.push({ at, to, ind, pre, post, texts: [txt] });
+    };
+
+    for (const c of comments) {
+      const idx  = Math.min(c.count + headCount, norm.length) - 1,
+            last = idx >= 0 ? norm[idx] : -1;
+
+      if (c.standalone) {
+        const at  = last + 1,
+              nxt = nextNw(at);
+
+        nxt === text.length ? addGroup( at, at, leadWs(at)
+                                      , at > 0 && text[at-1] !== "\n" ? "\n" : "", ""
+                                      , c.text
+                                      )
+                            :
+        nxt > lend(at)      ? addGroup( lstart(nxt), lstart(nxt), text.slice(lstart(nxt), nxt)
+                                      , "", "\n"
+                                      , c.text
+                                      )
+                            : addGroup( at, nxt
+                                      , at === lstart(at) ? text.slice(at, nxt) : contInd(at, nxt)
+                                      , at === lstart(at) ? "" : "\n"
+                                      , "\n" + (at === lstart(at) ? text.slice(at, nxt) : contInd(at, nxt))
+                                      , c.text
+                                      );
+      }
+      else {
+        let at = last + 1;
+        if (last >= 0 && ",;".includes(text[last]) && /^\s*$/.test(text.slice(lstart(last), last))) {
+          let p = last - 1;
+          while (p >= 0 && /\s/.test(text[p])) p--;
+          at = p + 1;
+        }
+        const nxt = nextNw(at),
+              add = nxt < text.length && nxt <= lend(at);
+        inlines.push({ at, to: add ? nxt : at
+                     , base: " " + c.text
+                     , text: " " + c.text + (add ? "\n" + contInd(at, nxt) : "")
+                     });
+      }
+    }
+
+    groups.forEach(g => edits.push({ at: g.at
+                                   , to: g.to
+                                   , pre: g.pre
+                                   , text: g.pre + g.texts.map(t => g.ind + t).join("\n") + g.post
+                                   }));
+
+    inlines.forEach(e => {
+                      const grp = edits.find(g => g.pre !== void 0 && g.at === e.at && g.to === e.to);
+                      grp ? grp.text = e.base + "\n" + grp.text.slice(grp.pre.length)
+                          : edits.push(e);
                     });
+
+    let out = text;
+    edits.sort((a,b) => b.at - a.at || b.to - a.to)
+         .forEach(e => out = out.slice(0, e.at) + e.text + out.slice(e.to));
+    return out.split("\n");
   }
 
   function formatSelection(realEditor, delimiters) {
@@ -424,7 +553,7 @@ function activate(context) {
     const headTxt = realEditor.document.getText(_sl);
     const tailTxt = realEditor.document.getText(sl_);
 
-    const { rawTxt, commentsMap, standaloneComments } = extractComments(fullTxt);
+    const { rawTxt, comments } = extractComments(fullTxt);
     const sup = suppressIrrelevantCharacters(rawTxt);
     
     const acc = rawTxt.split("")
@@ -479,7 +608,7 @@ function activate(context) {
                         )
                  .then(_ => vEditor.edit(eb => eb.insert(vEditor.selection.active, tailTxt)))
                  .then(_ => {
-                         const finalLines = reattachComments(vEditor.lines, commentsMap, standaloneComments),
+                         const finalLines = reattachComments(vEditor.lines, rawTxt, comments, headTxt.replace(/\s/g, "").length),
                                endLine    = s_l.start.line + finalLines.length - 1,
                                endChar    = finalLines[finalLines.length - 1].length,
                                newPos     = new vscode.Position(endLine, endChar);
@@ -516,14 +645,20 @@ function activate(context) {
     let act = true,
         nix = -1,
         ofs = -1,
-        dps;
+        dps,
+        tps,
+        ind,
+        cps;
 
     return !isDontCare(txt, pos) &&
            !isDeletion(change)   ? ( chgtxt === ":" &&
-                                     tefActive       ? ( nix = isTernaryColon(pos)?.character ?? -1
+                                     tefActive       ? ( cps = txt[pix] === ":" ? pos
+                                                                                : pos.translate(0, txt.slice(0, pix + 1).trimEnd().length - pix - 1)
+                                                       , tps = isTernaryColon(pos)
+                                                       , nix = tps?.character ?? -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
-                                                                                      , eb.replace( new vscode.Range(pos,pos.translate(0,1))
-                                                                                                  , "\n" + " ".repeat(nix) + ": "
+                                                                                      , eb.replace( new vscode.Range(cps,pos.translate(0,1))
+                                                                                                  , "\n" + indentationAt(editor.document.lineAt(tps.line).text, tps.character) + ": "
                                                                                                   )
                                                                                       ))
                                                                   : Promise.resolve()
@@ -538,27 +673,27 @@ function activate(context) {
                                                                                                  , " "
                                                                                                  )
                                                                                       , eb.insert( pos.translate(0, nix-pix+1)
-                                                                                                 , "\n" + (pix < 2*nix+1 ? " ".repeat(2*nix+1-pix) : "")
+                                                                                                 , "\n" + indentationForColumn(2 * visualColumn(txt, nix) + 1 - visualColumn(txt, pix))
                                                                                                  )
                                                                                       ))
                                                                   : Promise.resolve()
                                                        )
                                                      :
-                                     chgtxt === ","  ? ( [nix, dps, act] = cflActive ? indexOfIndent(txt,pos)
-                                                                                     : [-1, -1, false]
+                                     chgtxt === ","  ? ( [nix, dps, act, ind] = cflActive ? indexOfIndent(txt,pos)
+                                                                                            : [-1, -1, false]
                                                        , nix >= 0 &&
                                                          act      ? "{([".includes(txt[nix]) ? editor.edit(eb => ( freeToFix = false
                                                                                                                  , eb.insert(pos.translate(0, 1), " ")
-                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 , eb.insert(pos, "\n" + ind)
                                                                                                                  , ofs = offsetOfRightPair(txt,pos)
                                                                                                                  , ofs >= 0 && eb.insert( pos.translate(0, ofs)
-                                                                                                                                        , "\n" + " ".repeat(nix)
+                                                                                                                                        , "\n" + ind
                                                                                                                                         )
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                                              : editor.edit(eb => ( freeToFix = false
                                                                                                                  , eb.insert(pos.translate(0,1), " ")
-                                                                                                                 , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                                 , eb.insert(pos, "\n" + ind)
                                                                                                                  ))
                                                                                                      .then(_ => moveCursorTo(pos.line + 1, nix + 2))
                                                                   :
@@ -573,9 +708,9 @@ function activate(context) {
                                                        )
                                                      :
                                      chgtxt === "."  ? smcActive          &&
-                                                ")]".includes(txt[pix-1]) ? ( nix = indexOfIndent(txt, pos.translate(0,-1), ".")[0]
+                                                ")]".includes(txt[pix-1]) ? ( [nix,,,ind] = indexOfIndent(txt, pos.translate(0,-1), ".")
                                                                             , nix >= 0 && editor.edit(eb => ( freeToFix = false
-                                                                                                            , eb.insert(pos, "\n" + " ".repeat(nix))
+                                                                                                            , eb.insert(pos, "\n" + ind)
                                                                                                             ))
                                                                             )
                                                                           : Promise.resolve()
@@ -585,7 +720,7 @@ function activate(context) {
                                                                          : -1
                                                        , nix >= 0 ? editor.edit(eb => ( freeToFix = false
                                                                                       , eb.insert( pos.translate(0,1)
-                                                                                                 , "\n" + " ".repeat(nix + 2) + "\n" + " ".repeat(nix)
+                                                                                                 , "\n" + indentationForColumn(visualColumn(txt, nix) + 2) + "\n" + indentationAt(txt, nix)
                                                                                                  )
                                                                                       ))
                                                                           .then(_ => moveCursorTo(pos.line + 1, nix + 2))
@@ -601,12 +736,12 @@ function activate(context) {
                                                                                                                   )))
                                                                             .then( _ => moveCursorTo(pos.line, nix + 1))
                                                                     )
-                                                                  : ( [nix,, act] = cflActive ? indexOfIndent(txt, pos, chgtxt)
-                                                                                              : [-1, -1, false]
+                                                                  : ( [nix,, act, ind] = cflActive ? indexOfIndent(txt, pos, chgtxt)
+                                                                                                   : [-1, -1, false]
                                                                     , nix >= 0                    &&
                                                                       act                         &&
                                                                       txt[ nix] !== pairof[chgtxt] ? ( freeToFix = false
-                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + " ".repeat( nix)))
+                                                                                                     , editor.edit(eb => eb.insert(pos, "\n" + ind))
                                                                                                              .then(_ => moveCursorTo(pos.line + 1, nix + 1))
                                                                                                      )
                                                                                                    : Promise.resolve()

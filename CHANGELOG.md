@@ -508,3 +508,32 @@ Date:   Tue Nov 10 14:28:30 2026 +0300
          two non-consecutive division operators ("/")
          as start of line comment.
     ver: v0.4.13
+_________________________________________________
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Tue Nov 10 14:46:24 2026 +0300
+
+    fix: update indexOfIndent to return indentation
+         string considering the tab characters for
+         improved formatting in editor.
+         refactor comment extraction and reattachment
+         logic for improved accuracy.
+         enhance alignment logic in declaration handling
+         for improved alignment / indentation accuracy
+         when declaration is a function with similar
+         declarations.
+         enhance indentation handling in method chaining
+         for improved formatting and accuracy when there
+         are leading tabs.
+         enhance indentation handling by implementing
+         dynamic tab size and improving visual column
+         calculations
+         improve indentation handling in activate
+         function by adjusting position calculations for
+         ternary formatting
+    ver: v0.4.14
+
+
+
+
+
+
