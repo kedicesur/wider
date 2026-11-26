@@ -446,9 +446,9 @@ function activate(context) {
 
     const lstart    = i => text.lastIndexOf("\n", i - 1) + 1,
           lend      = i => {
-                        const j        = text.indexOf("\n", i);
+                        const j = text.indexOf("\n", i);
                         return j < 0 ? text.length
-                                     : j;
+                                    : j;
                       },
           nextNw    = i => {
                         while (i < text.length && !/\S/.test(text[i])) i++;
@@ -460,13 +460,14 @@ function activate(context) {
                               open  = { "}": "{", "]": "[", ")": "(" }[close];
                         if (!open) return -1;
                         for (let d  = 0, j = i; j >= 0; j--) {
-                            if (text[j] === close) d++;
-                            else if (text[j] === open && --d === 0) return visualColumn(text.slice(lstart(j), j));
-                          }
-                          return -1;
+                           if (text[j] === close) d++;
+                           else if (text[j] === open && --d === 0) return visualColumn(text.slice(lstart(j), j));
+                         }
+                         return -1;
                       },
           contInd   = (at, nxt) => "}])".includes(text[nxt]) && openerCol(nxt) >= 0 ? indentationForColumn(openerCol(nxt))
                                                                                     : indentationAt(text.slice(lstart(at), nxt));
+    
     let cix = 0,
         cnt = 0;
     for (let i = 0; i < rawTxt.length && cix < comments.length; i++) {
