@@ -540,5 +540,13 @@ Date:   Wed Nov 25 21:29:08 2026 +0300
         calculations.
         version bump to publish proper master branch.
    ver: v0.4.15
+_________________________________________________
 
+Author: Ömer Kaşdarma <omer.kasdarma@gmail.com>
+Date:   Thu Nov 26 15:38:36 2026 +0300
 
+   fix: a tab before the opener on the same line
+        (e.g. the selection's first line is tab-indented,
+        or a comma on a tab-indented line) was breaking
+        Selection to Comma-First
+   ver: v0.4.16
